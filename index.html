@@ -72,12 +72,6 @@
                             <p class="text-xs text-rose-100/80 font-medium">Cluster Green Primera 6 (19 KK: A1-A5, B1-B7, C1-C7)</p>
                         </div>
                     </div>
-
-                    <!-- Mobile sync indicator -->
-                    <div class="md:hidden flex items-center gap-2 text-xs bg-black/20 px-2.5 py-1 rounded-lg">
-                        <span id="syncPulseMobile" class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                        <span id="syncTextMobile" class="text-emerald-200 text-[10px]">Connected</span>
-                    </div>
                 </div>
 
                 <!-- Controls & Actions -->
@@ -107,7 +101,7 @@
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full space-y-6">
 
         <!-- Banner Toast Notification -->
-        <div id="toastNotification" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl shadow-sm flex items-center justify-between text-xs sm:text-sm animate-fade-in">
+        <div id="toastNotification" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl shadow-sm flex items-center justify-between text-xs sm:text-sm">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
                 <span id="toastMessage">Data berhasil disinkronisasi secara real-time dari Google Sheets!</span>
@@ -119,225 +113,64 @@
 
         <!-- KPI SUMMARY CARDS -->
         <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-            
-            <!-- KPI 1: Total Penerimaan -->
-            <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition-all relative overflow-hidden group">
-                <div class="absolute -right-2 -bottom-2 w-20 h-20 bg-emerald-100/60 rounded-full group-hover:scale-110 transition-transform -z-0"></div>
-                <div class="relative z-10">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Pemasukan Kas</span>
-                        <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">
-                            <i class="fa-solid fa-wallet"></i>
-                        </div>
-                    </div>
-                    <h3 id="kpiTotalPemasukan" class="text-2xl font-black text-slate-900 tracking-tight">Rp 3.118.889</h3>
-                    <div class="mt-2 text-xs text-slate-500 flex items-center gap-1 font-medium">
-                        <span class="text-emerald-600 font-bold"><i class="fa-solid fa-arrow-trend-up"></i> Rp 2.903.000</span> Iuran + Kas
-                    </div>
-                </div>
+            <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200/80">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Pemasukan Kas</span>
+                <h3 id="kpiTotalPemasukan" class="text-2xl font-black text-slate-900 mt-2">Rp 3.118.889</h3>
             </div>
-
-            <!-- KPI 2: Total Pengeluaran -->
-            <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition-all relative overflow-hidden group">
-                <div class="absolute -right-2 -bottom-2 w-20 h-20 bg-rose-100/60 rounded-full group-hover:scale-110 transition-transform -z-0"></div>
-                <div class="relative z-10">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Pengeluaran</span>
-                        <div class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-sm">
-                            <i class="fa-solid fa-money-bill-transfer"></i>
-                        </div>
-                    </div>
-                    <h3 id="kpiTotalPengeluaran" class="text-2xl font-black text-slate-900 tracking-tight">Rp 1.539.000</h3>
-                    <div class="mt-2 text-xs text-slate-500 flex items-center gap-1 font-medium">
-                        <span class="text-rose-600 font-bold"><i class="fa-solid fa-arrow-trend-down"></i> TRX-001 s/d TRX-007</span> Realisasi
-                    </div>
-                </div>
+            <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200/80">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Pengeluaran</span>
+                <h3 id="kpiTotalPengeluaran" class="text-2xl font-black text-slate-900 mt-2">Rp 1.539.000</h3>
             </div>
-
-            <!-- KPI 3: Saldo Kas Berjalan -->
-            <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition-all relative overflow-hidden group">
-                <div class="absolute -right-2 -bottom-2 w-20 h-20 bg-sky-100/60 rounded-full group-hover:scale-110 transition-transform -z-0"></div>
-                <div class="relative z-10">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Saldo Kas Berjalan</span>
-                        <div class="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold text-sm">
-                            <i class="fa-solid fa-vault"></i>
-                        </div>
-                    </div>
-                    <h3 id="kpiSaldoKas" class="text-2xl font-black text-sky-700 tracking-tight">Rp 1.579.889</h3>
-                    <div class="mt-2 text-xs text-slate-500 flex items-center gap-1 font-medium">
-                        <span class="text-sky-600 font-bold"><i class="fa-solid fa-shield-halved"></i> Dana Bersih</span> Kas Tersedia
-                    </div>
-                </div>
+            <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200/80">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Saldo Kas Berjalan</span>
+                <h3 id="kpiSaldoKas" class="text-2xl font-black text-sky-700 mt-2">Rp 1.579.889</h3>
             </div>
-
-            <!-- KPI 4: Sisa Kebutuhan RAB -->
-            <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition-all relative overflow-hidden group">
-                <div class="absolute -right-2 -bottom-2 w-20 h-20 bg-amber-100/60 rounded-full group-hover:scale-110 transition-transform -z-0"></div>
-                <div class="relative z-10">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Sisa Kebutuhan RAB</span>
-                        <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-sm">
-                            <i class="fa-solid fa-bullseye"></i>
-                        </div>
-                    </div>
-                    <h3 id="kpiSisaRAB" class="text-2xl font-black text-amber-700 tracking-tight">Rp 24.201.000</h3>
-                    <div class="mt-2 text-xs text-slate-500 flex items-center gap-1 font-medium">
-                        <span class="text-amber-600 font-bold">RAB Total:</span> Rp 25.740.000
-                    </div>
-                </div>
+            <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200/80">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Sisa Kebutuhan RAB</span>
+                <h3 id="kpiSisaRAB" class="text-2xl font-black text-amber-700 mt-2">Rp 24.201.000</h3>
             </div>
-
         </section>
 
         <!-- NAVIGATION TABS -->
         <div class="border-b border-slate-200 bg-white rounded-2xl p-2 shadow-sm flex flex-nowrap overflow-x-auto custom-scrollbar gap-1 text-xs sm:text-sm font-semibold">
             <button onclick="switchTab('tab-dashboard')" id="btn-tab-dashboard" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all bg-brand-maroon text-white shadow-sm">
-                <i class="fa-solid fa-chart-line"></i>
-                <span>Ringkasan & Visualisasi</span>
+                <i class="fa-solid fa-chart-line"></i><span>Ringkasan & Visualisasi</span>
             </button>
             <button onclick="switchTab('tab-penerimaan')" id="btn-tab-penerimaan" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all text-slate-600 hover:bg-slate-100">
-                <i class="fa-solid fa-calendar-check"></i>
-                <span>Buku Kas IPL (Iuran)</span>
+                <i class="fa-solid fa-calendar-check"></i><span>Buku Kas IPL (Iuran)</span>
             </button>
             <button onclick="switchTab('tab-operasional')" id="btn-tab-operasional" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all text-slate-600 hover:bg-slate-100">
-                <i class="fa-solid fa-receipt"></i>
-                <span>Laporan Operasional</span>
+                <i class="fa-solid fa-receipt"></i><span>Laporan Operasional</span>
             </button>
             <button onclick="switchTab('tab-rab')" id="btn-tab-rab" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all text-slate-600 hover:bg-slate-100">
-                <i class="fa-solid fa-list-check"></i>
-                <span>Rencana Anggaran (RAB)</span>
+                <i class="fa-solid fa-list-check"></i><span>Rencana Anggaran (RAB)</span>
             </button>
         </div>
 
-        <!-- TAB CONTENT 1: DASHBOARD RINGKASAN & CHARTS -->
+        <!-- TAB CONTENT 1: DASHBOARD -->
         <div id="tab-dashboard" class="tab-content space-y-6">
-            
-            <!-- Charts Row -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Bar Chart: Cashflow -->
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 lg:col-span-2 flex flex-col">
-                    <div class="flex items-center justify-between mb-4">
-                        <div>
-                            <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-                                <i class="fa-solid fa-chart-column text-brand-maroon"></i> Laju Arus Kas Bulanan
-                            </h3>
-                            <p class="text-xs text-slate-400">Perbandingan Pemasukan Iuran vs Pengeluaran Kas Operasional</p>
-                        </div>
-                        <span class="text-xs bg-slate-100 font-bold px-2.5 py-1 rounded-lg text-slate-600">Tahun 2026</span>
-                    </div>
-                    <div class="relative flex-grow h-72">
-                        <canvas id="cashflowChart"></canvas>
-                    </div>
+                    <h3 class="font-bold text-slate-800 text-base mb-4"><i class="fa-solid fa-chart-column text-brand-maroon"></i> Laju Arus Kas Bulanan</h3>
+                    <div class="relative flex-grow h-72"><canvas id="cashflowChart"></canvas></div>
                 </div>
-
-                <!-- Doughnut Chart: RAB Allocations -->
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
-                    <div class="flex items-center justify-between mb-4">
-                        <div>
-                            <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-                                <i class="fa-solid fa-chart-pie text-emerald-600"></i> Alokasi Anggaran RAB
-                            </h3>
-                            <p class="text-xs text-slate-400">Proporsi Perencanaan Belanja Tahun 2026</p>
-                        </div>
-                    </div>
-                    <div class="relative flex-grow h-72 flex items-center justify-center">
-                        <canvas id="rabChart"></canvas>
-                    </div>
+                    <h3 class="font-bold text-slate-800 text-base mb-4"><i class="fa-solid fa-chart-pie text-emerald-600"></i> Alokasi Anggaran RAB</h3>
+                    <div class="relative flex-grow h-72 flex items-center justify-center"><canvas id="rabChart"></canvas></div>
                 </div>
             </div>
-
-            <!-- Overview Quick Data Highlights -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                <!-- Quick Summary 1: Status Pembayaran Terakhir -->
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
-                    <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-                        <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-clock-rotate-left text-emerald-600"></i> Sorotan Pembayaran Iuran Warga
-                        </h4>
-                        <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full">19 KK Aktif</span>
-                    </div>
-                    <div class="space-y-2 text-xs">
-                        <div class="flex justify-between items-center p-2.5 bg-slate-50 rounded-xl">
-                            <div>
-                                <span class="font-bold text-slate-800 block">Oktober 2026</span>
-                                <span class="text-slate-500">19 KK Terkumpul</span>
-                            </div>
-                            <span class="font-bold text-emerald-700 bg-emerald-100/60 px-3 py-1 rounded-lg">Rp 2.603.000</span>
-                        </div>
-                        <div class="flex justify-between items-center p-2.5 bg-slate-50 rounded-xl">
-                            <div>
-                                <span class="font-bold text-slate-800 block">November 2026</span>
-                                <span class="text-slate-500">Iuran Masuk Sebagian</span>
-                            </div>
-                            <span class="font-bold text-emerald-700 bg-emerald-100/60 px-3 py-1 rounded-lg">Rp 300.000</span>
-                        </div>
-                        <div class="flex justify-between items-center p-2.5 bg-slate-50 rounded-xl">
-                            <div>
-                                <span class="font-bold text-slate-800 block">Sisa Dana Event 17an</span>
-                                <span class="text-slate-500">Dialihkan ke Kas Operasional</span>
-                            </div>
-                            <span class="font-bold text-sky-700 bg-sky-100/60 px-3 py-1 rounded-lg">Rp 215.889</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Summary 2: Status Pengeluaran Terakhir -->
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
-                    <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-                        <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-receipt text-rose-600"></i> Pengeluaran Kas Terbaru
-                        </h4>
-                        <span class="text-xs font-semibold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full">7 Transaksi</span>
-                    </div>
-                    <div class="space-y-2 text-xs">
-                        <div class="flex justify-between items-center p-2.5 bg-slate-50 rounded-xl">
-                            <div>
-                                <span class="font-bold text-slate-800 block">TRX-002: Perbaikan Pagar Cluster</span>
-                                <span class="text-slate-500">04-10-2026 • Tukang Las</span>
-                            </div>
-                            <span class="font-bold text-rose-700 bg-rose-100/60 px-3 py-1 rounded-lg">Rp 70.000</span>
-                        </div>
-                        <div class="flex justify-between items-center p-2.5 bg-slate-50 rounded-xl">
-                            <div>
-                                <span class="font-bold text-slate-800 block">TRX-004: Pembayaran Damkar</span>
-                                <span class="text-slate-500">18-10-2026 • Operasional</span>
-                            </div>
-                            <span class="font-bold text-rose-700 bg-rose-100/60 px-3 py-1 rounded-lg">Rp 150.000</span>
-                        </div>
-                        <div class="flex justify-between items-center p-2.5 bg-slate-50 rounded-xl">
-                            <div>
-                                <span class="font-bold text-slate-800 block">TRX-005: Kepolisian Tambun</span>
-                                <span class="text-slate-500">22-10-2026 • Keamanan</span>
-                            </div>
-                            <span class="font-bold text-rose-700 bg-rose-100/60 px-3 py-1 rounded-lg">Rp 100.000</span>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
         </div>
 
-        <!-- TAB CONTENT 2: BUKU KAS IPL (REKAP PENERIMAAN) -->
+        <!-- TAB CONTENT 2: BUKU KAS IPL -->
         <div id="tab-penerimaan" class="tab-content hidden space-y-4">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="p-4 sm:p-5 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div>
-                        <h3 class="font-bold text-slate-800 text-base">Rekap Pemasukan Kas & Iuran IPL Bulanan</h3>
-                        <p class="text-xs text-slate-500">Rincian perolehan Uang Operasional (Rp 95k) & Uang Sampah (Rp 55k)</p>
-                    </div>
-                    <div class="relative w-full sm:w-64">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                        <input type="text" id="searchPenerimaan" onkeyup="filterTable('searchPenerimaan', 'tablePenerimaan')" placeholder="Cari bulan..." class="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                    </div>
+                <div class="p-4 sm:p-5 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-800 text-base">Rekap Pemasukan Kas & Iuran IPL Bulanan</h3>
                 </div>
-
                 <div class="overflow-x-auto">
                     <table id="tablePenerimaan" class="w-full text-left border-collapse text-xs sm:text-sm">
                         <thead>
-                            <tr class="bg-slate-100/80 text-slate-600 uppercase text-[11px] font-bold tracking-wider border-b border-slate-200">
+                            <tr class="bg-slate-100 text-slate-600 uppercase text-[11px] font-bold border-b">
                                 <th class="py-3 px-4">Bulan / Sumber</th>
                                 <th class="py-3 px-4 text-right">Operasional (Rp)</th>
                                 <th class="py-3 px-4 text-right">Sampah (Rp)</th>
@@ -346,75 +179,22 @@
                                 <th class="py-3 px-4 text-right">Saldo Kas Bulanan (Rp)</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 text-slate-700">
-                            <tr class="bg-sky-50/50 font-medium">
-                                <td class="py-3 px-4 text-sky-900 font-bold"><i class="fa-solid fa-circle-info text-sky-600 mr-1.5"></i> Sisa IURAN 17an (Saldo Awal)</td>
-                                <td class="py-3 px-4 text-right text-slate-400">-</td>
-                                <td class="py-3 px-4 text-right text-slate-400">-</td>
-                                <td class="py-3 px-4 text-right font-bold text-sky-800">215.889</td>
-                                <td class="py-3 px-4 text-right text-slate-400">0</td>
-                                <td class="py-3 px-4 text-right font-bold text-sky-800">215.889</td>
-                            </tr>
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="py-3 px-4 font-bold text-slate-900">October 2026</td>
-                                <td class="py-3 px-4 text-right">1.649.000</td>
-                                <td class="py-3 px-4 text-right">954.000</td>
-                                <td class="py-3 px-4 text-right font-bold text-emerald-700">2.603.000</td>
-                                <td class="py-3 px-4 text-right text-rose-600 font-semibold">1.539.000</td>
-                                <td class="py-3 px-4 text-right font-bold text-slate-900">1.064.000</td>
-                            </tr>
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="py-3 px-4 font-bold text-slate-900">November 2026</td>
-                                <td class="py-3 px-4 text-right">194.000</td>
-                                <td class="py-3 px-4 text-right">106.000</td>
-                                <td class="py-3 px-4 text-right font-bold text-emerald-700">300.000</td>
-                                <td class="py-3 px-4 text-right text-slate-400">0</td>
-                                <td class="py-3 px-4 text-right font-bold text-slate-900">300.000</td>
-                            </tr>
-                            <tr class="hover:bg-slate-50/50 transition-colors text-slate-400"><td class="py-2.5 px-4 font-medium">December 2026</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td></tr>
-                            <tr class="hover:bg-slate-50/50 transition-colors text-slate-400"><td class="py-2.5 px-4 font-medium">January 2027</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td></tr>
-                            <tr class="hover:bg-slate-50/50 transition-colors text-slate-400"><td class="py-2.5 px-4 font-medium">February 2027</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td></tr>
-                            <tr class="hover:bg-slate-50/50 transition-colors text-slate-400"><td class="py-2.5 px-4 font-medium">March 2027</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td></tr>
-                            <tr class="hover:bg-slate-50/50 transition-colors text-slate-400"><td class="py-2.5 px-4 font-medium">April 2027</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td></tr>
-                            <tr class="hover:bg-slate-50/50 transition-colors text-slate-400"><td class="py-2.5 px-4 font-medium">May 2027</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td></tr>
-                            <tr class="hover:bg-slate-50/50 transition-colors text-slate-400"><td class="py-2.5 px-4 font-medium">June 2027</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td></tr>
-                            <tr class="hover:bg-slate-50/50 transition-colors text-slate-400"><td class="py-2.5 px-4 font-medium">July 2027</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td></tr>
-                            <tr class="hover:bg-slate-50/50 transition-colors text-slate-400"><td class="py-2.5 px-4 font-medium">August 2027</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td></tr>
-                            <tr class="hover:bg-slate-50/50 transition-colors text-slate-400"><td class="py-2.5 px-4 font-medium">September 2027</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td><td class="py-2.5 px-4 text-right">0</td></tr>
-                        </tbody>
-                        <tfoot>
-                            <tr class="bg-slate-100 font-extrabold text-slate-900 border-t border-slate-300">
-                                <td class="py-3.5 px-4">TOTAL SETAHUN</td>
-                                <td class="py-3.5 px-4 text-right">1.843.000</td>
-                                <td class="py-3.5 px-4 text-right">1.060.000</td>
-                                <td class="py-3.5 px-4 text-right text-emerald-800">3.118.889</td>
-                                <td class="py-3.5 px-4 text-right text-rose-700">1.539.000</td>
-                                <td class="py-3.5 px-4 text-right text-sky-800">1.579.889</td>
-                            </tr>
-                        </tfoot>
+                        <tbody class="divide-y divide-slate-100 text-slate-700"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- TAB CONTENT 3: LAPORAN OPERASIONAL (MUTASI KAS OUT) -->
+        <!-- TAB CONTENT 3: LAPORAN OPERASIONAL -->
         <div id="tab-operasional" class="tab-content hidden space-y-4">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="p-4 sm:p-5 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div>
-                        <h3 class="font-bold text-slate-800 text-base">Jurnal Mutasi Arus Kas Operasional</h3>
-                        <p class="text-xs text-slate-500">Pencatatan mutasi Debit (Masuk) dan Kredit (Keluar) secara rinci</p>
-                    </div>
-                    <div class="relative w-full sm:w-64">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                        <input type="text" id="searchOps" onkeyup="filterTable('searchOps', 'tableOps')" placeholder="Cari transaksi..." class="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                    </div>
+                <div class="p-4 sm:p-5 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-800 text-base">Jurnal Mutasi Arus Kas Operasional</h3>
                 </div>
-
                 <div class="overflow-x-auto">
                     <table id="tableOps" class="w-full text-left border-collapse text-xs sm:text-sm">
                         <thead>
-                            <tr class="bg-slate-100/80 text-slate-600 uppercase text-[11px] font-bold tracking-wider border-b border-slate-200">
+                            <tr class="bg-slate-100 text-slate-600 uppercase text-[11px] font-bold border-b">
                                 <th class="py-3 px-4">No. TRX</th>
                                 <th class="py-3 px-4">Tanggal</th>
                                 <th class="py-3 px-4">Kode Akun (COA)</th>
@@ -424,158 +204,34 @@
                                 <th class="py-3 px-4 text-right">Saldo Akhir (Rp)</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 text-slate-700">
-                            <tr class="hover:bg-slate-50">
-                                <td class="py-3 px-4 font-mono font-bold text-slate-500">TRX-001</td>
-                                <td class="py-3 px-4">30-8-2026</td>
-                                <td class="py-3 px-4"><span class="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2 py-0.5 rounded-full">Admin & KAS</span></td>
-                                <td class="py-3 px-4 font-medium text-slate-900">Sisah IURAN 17an</td>
-                                <td class="py-3 px-4 text-right font-bold text-emerald-700">215.889</td>
-                                <td class="py-3 px-4 text-right text-slate-400">-</td>
-                                <td class="py-3 px-4 text-right font-bold text-slate-900">215.889</td>
-                            </tr>
-                            <tr class="hover:bg-slate-50">
-                                <td class="py-3 px-4 font-mono font-bold text-slate-500">TRX-002</td>
-                                <td class="py-3 px-4">-</td>
-                                <td class="py-3 px-4"><span class="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2 py-0.5 rounded-full">Admin & KAS</span></td>
-                                <td class="py-3 px-4 font-medium text-slate-900">Saldo Masuk Operasional terupdate</td>
-                                <td class="py-3 px-4 text-right font-bold text-emerald-700">1.843.000</td>
-                                <td class="py-3 px-4 text-right text-slate-400">-</td>
-                                <td class="py-3 px-4 text-right font-bold text-slate-900">1.843.000</td>
-                            </tr>
-                            <tr class="hover:bg-slate-50">
-                                <td class="py-3 px-4 font-mono font-bold text-slate-500">TRX-002</td>
-                                <td class="py-3 px-4">04-10-2026</td>
-                                <td class="py-3 px-4"><span class="bg-sky-100 text-sky-800 text-[11px] font-bold px-2 py-0.5 rounded-full">Operasional & Fasum</span></td>
-                                <td class="py-3 px-4 font-medium text-slate-900">Perbaikan Pagar Cluster (Tukang Las)</td>
-                                <td class="py-3 px-4 text-right text-slate-400">-</td>
-                                <td class="py-3 px-4 text-right font-bold text-rose-600">70.000</td>
-                                <td class="py-3 px-4 text-right font-medium text-slate-700">-</td>
-                            </tr>
-                            <tr class="hover:bg-slate-50">
-                                <td class="py-3 px-4 font-mono font-bold text-slate-500">TRX-003</td>
-                                <td class="py-3 px-4">04-10-2026</td>
-                                <td class="py-3 px-4"><span class="bg-sky-100 text-sky-800 text-[11px] font-bold px-2 py-0.5 rounded-full">Operasional & Fasum</span></td>
-                                <td class="py-3 px-4 font-medium text-slate-900">Pembelian Stiker Rambu CCTV 3 Pcs</td>
-                                <td class="py-3 px-4 text-right text-slate-400">-</td>
-                                <td class="py-3 px-4 text-right font-bold text-rose-600">19.000</td>
-                                <td class="py-3 px-4 text-right font-medium text-slate-700">-</td>
-                            </tr>
-                            <tr class="hover:bg-slate-50">
-                                <td class="py-3 px-4 font-mono font-bold text-slate-500">TRX-004</td>
-                                <td class="py-3 px-4">18-10-2026</td>
-                                <td class="py-3 px-4"><span class="bg-sky-100 text-sky-800 text-[11px] font-bold px-2 py-0.5 rounded-full">Operasional & Fasum</span></td>
-                                <td class="py-3 px-4 font-medium text-slate-900">Pembayaran Damkar</td>
-                                <td class="py-3 px-4 text-right text-slate-400">-</td>
-                                <td class="py-3 px-4 text-right font-bold text-rose-600">150.000</td>
-                                <td class="py-3 px-4 text-right font-medium text-slate-700">-</td>
-                            </tr>
-                            <tr class="hover:bg-slate-50">
-                                <td class="py-3 px-4 font-mono font-bold text-slate-500">TRX-005</td>
-                                <td class="py-3 px-4">22-10-2026</td>
-                                <td class="py-3 px-4"><span class="bg-sky-100 text-sky-800 text-[11px] font-bold px-2 py-0.5 rounded-full">Operasional & Fasum</span></td>
-                                <td class="py-3 px-4 font-medium text-slate-900">Pembayaran uang kepolisian tambun ke mas adi</td>
-                                <td class="py-3 px-4 text-right text-slate-400">-</td>
-                                <td class="py-3 px-4 text-right font-bold text-rose-600">100.000</td>
-                                <td class="py-3 px-4 text-right font-medium text-slate-700">-</td>
-                            </tr>
-                            <tr class="hover:bg-slate-50">
-                                <td class="py-3 px-4 font-mono font-bold text-slate-500">TRX-006</td>
-                                <td class="py-3 px-4">25-10-2026</td>
-                                <td class="py-3 px-4"><span class="bg-sky-100 text-sky-800 text-[11px] font-bold px-2 py-0.5 rounded-full">Operasional & Fasum</span></td>
-                                <td class="py-3 px-4 font-medium text-slate-900">Pembayaran uang kepolisian tambun ke pak sugeng</td>
-                                <td class="py-3 px-4 text-right text-slate-400">-</td>
-                                <td class="py-3 px-4 text-right font-bold text-rose-600">150.000</td>
-                                <td class="py-3 px-4 text-right font-medium text-slate-700">-</td>
-                            </tr>
-                            <tr class="hover:bg-slate-50">
-                                <td class="py-3 px-4 font-mono font-bold text-slate-500">TRX-007</td>
-                                <td class="py-3 px-4">25-10-2026</td>
-                                <td class="py-3 px-4"><span class="bg-sky-100 text-sky-800 text-[11px] font-bold px-2 py-0.5 rounded-full">Operasional & Fasum</span></td>
-                                <td class="py-3 px-4 font-medium text-slate-900">Pembayaran uang kepolisian tambun ke mas supri</td>
-                                <td class="py-3 px-4 text-right text-slate-400">-</td>
-                                <td class="py-3 px-4 text-right font-bold text-rose-600">50.000</td>
-                                <td class="py-3 px-4 text-right font-medium text-slate-700">-</td>
-                            </tr>
-                        </tbody>
-                        <tfoot>
-                            <tr class="bg-slate-100 font-extrabold text-slate-900 border-t border-slate-300">
-                                <td colspan="4" class="py-3.5 px-4 text-right uppercase">Total Mutasi Arus Kas</td>
-                                <td class="py-3.5 px-4 text-right text-emerald-800">2.058.889</td>
-                                <td class="py-3.5 px-4 text-right text-rose-700">539.000</td>
-                                <td class="py-3.5 px-4 text-right text-sky-800">1.519.889</td>
-                            </tr>
-                        </tfoot>
+                        <tbody class="divide-y divide-slate-100 text-slate-700"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- TAB CONTENT 4: RENCANA ANGGARAN BIAYA (RAB) -->
+        <!-- TAB CONTENT 4: RENCANA ANGGARAN (RAB IPL) -->
         <div id="tab-rab" class="tab-content hidden space-y-4">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="p-4 sm:p-5 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div>
-                        <h3 class="font-bold text-slate-800 text-base">Rencana Anggaran Biaya (RAB) IPL Setahun</h3>
-                        <p class="text-xs text-slate-500">Target pengeluaran rutinitas lingkungan Cluster GP6 (12 Bulan)</p>
-                    </div>
+                <div class="p-4 sm:p-5 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-800 text-base">Rencana Anggaran Biaya (RAB) IPL</h3>
                 </div>
-
                 <div class="overflow-x-auto">
                     <table id="tableRAB" class="w-full text-left border-collapse text-xs sm:text-sm">
                         <thead>
-                            <tr class="bg-slate-100/80 text-slate-600 uppercase text-[11px] font-bold tracking-wider border-b border-slate-200">
+                            <tr class="bg-slate-100 text-slate-600 uppercase text-[11px] font-bold border-b">
                                 <th class="py-3 px-4">No</th>
-                                <th class="py-3 px-4">Kategori Pos Anggaran</th>
-                                <th class="py-3 px-4 text-right">Target Bulanan (Rp)</th>
-                                <th class="py-3 px-4 text-right">Target Setahun (Rp)</th>
-                                <th class="py-3 px-4 text-right">Realisasi (Rp)</th>
-                                <th class="py-3 px-4 text-right">Sisa Anggaran (Rp)</th>
+                                <th class="py-3 px-4">Kategori</th>
+                                <th class="py-3 px-4">Uraian Kebutuhan</th>
+                                <th class="py-3 px-4 text-center">Vol</th>
+                                <th class="py-3 px-4">Satuan</th>
+                                <th class="py-3 px-4 text-right">Harga Satuan (Rp)</th>
+                                <th class="py-3 px-4 text-center">Status</th>
+                                <th class="py-3 px-4 text-right">Total Anggaran (Rp)</th>
+                                <th class="py-3 px-4">Keterangan</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 text-slate-700">
-                            <tr class="hover:bg-slate-50">
-                                <td class="py-3 px-4 font-bold text-slate-400">1</td>
-                                <td class="py-3 px-4 font-semibold text-slate-800">Pengangkutan Sampah Lingkungan</td>
-                                <td class="py-3 px-4 text-right">1.045.000</td>
-                                <td class="py-3 px-4 text-right font-bold text-slate-900">12.540.000</td>
-                                <td class="py-3 px-4 text-right text-rose-600">954.000</td>
-                                <td class="py-3 px-4 text-right font-bold text-amber-700">11.586.000</td>
-                            </tr>
-                            <tr class="hover:bg-slate-50">
-                                <td class="py-3 px-4 font-bold text-slate-400">2</td>
-                                <td class="py-3 px-4 font-semibold text-slate-800">Uang Keamanan / Scurity / Polsek</td>
-                                <td class="py-3 px-4 text-right">600.000</td>
-                                <td class="py-3 px-4 text-right font-bold text-slate-900">7.200.000</td>
-                                <td class="py-3 px-4 text-right text-rose-600">300.000</td>
-                                <td class="py-3 px-4 text-right font-bold text-amber-700">6.900.000</td>
-                            </tr>
-                            <tr class="hover:bg-slate-50">
-                                <td class="py-3 px-4 font-bold text-slate-400">3</td>
-                                <td class="py-3 px-4 font-semibold text-slate-800">Pemeliharaan Fasum & Pagar</td>
-                                <td class="py-3 px-4 text-right">300.000</td>
-                                <td class="py-3 px-4 text-right font-bold text-slate-900">3.600.000</td>
-                                <td class="py-3 px-4 text-right text-rose-600">89.000</td>
-                                <td class="py-3 px-4 text-right font-bold text-amber-700">3.511.000</td>
-                            </tr>
-                            <tr class="hover:bg-slate-50">
-                                <td class="py-3 px-4 font-bold text-slate-400">4</td>
-                                <td class="py-3 px-4 font-semibold text-slate-800">Kas Operational & Kegiatan RT</td>
-                                <td class="py-3 px-4 text-right">200.000</td>
-                                <td class="py-3 px-4 text-right font-bold text-slate-900">2.400.000</td>
-                                <td class="py-3 px-4 text-right text-rose-600">196.000</td>
-                                <td class="py-3 px-4 text-right font-bold text-amber-700">2.204.000</td>
-                            </tr>
-                        </tbody>
-                        <tfoot>
-                            <tr class="bg-slate-100 font-extrabold text-slate-900 border-t border-slate-300">
-                                <td colspan="2" class="py-3.5 px-4 uppercase">Total Rencana Anggaran</td>
-                                <td class="py-3.5 px-4 text-right">2.145.000</td>
-                                <td class="py-3.5 px-4 text-right text-slate-900">25.740.000</td>
-                                <td class="py-3.5 px-4 text-right text-rose-700">1.539.000</td>
-                                <td class="py-3.5 px-4 text-right text-amber-800">24.201.000</td>
-                            </tr>
-                        </tfoot>
+                        <tbody class="divide-y divide-slate-100 text-slate-700"></tbody>
                     </table>
                 </div>
             </div>
@@ -585,28 +241,22 @@
 
     <!-- Footer -->
     <footer class="bg-slate-900 text-slate-400 text-xs py-6 mt-auto border-t border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 text-center space-y-2">
+        <div class="max-w-7xl mx-auto px-4 text-center">
             <p>© 2026 Sistem Informasi Keuangan GP6 - Cluster Green Primera 6</p>
-            <p class="text-slate-500">Transparansi Real-Time untuk Kenyamanan Bersama • Terhubung ke Google Sheets</p>
         </div>
     </footer>
 
-    <!-- REAL-TIME DATA FETCHING & INTERACTIVE SCRIPT (LANGKAH NO. 3) -->
+    <!-- REAL-TIME DATA FETCHING SCRIPT -->
     <script>
-        // ID Spreadsheet Google Keuangan GP6
         const SPREADSHEET_ID = '1-tDw5FVxGm59QORzgkZle2dYpQfF5hTxtcb8H30DX3c';
-
         let cashflowChartInstance = null;
         let rabChartInstance = null;
 
-        // -------------------------------------------------------------
-        // 1. FUNGSI UTAMA: FETCH DATA REAL-TIME DARI GOOGLE SHEETS
-        // -------------------------------------------------------------
         async function fetchSheetData(sheetName) {
             const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
             try {
                 const response = await fetch(url);
-                if (!response.ok) throw new Error('Gagal mengambil data dari Google Sheets');
+                if (!response.ok) throw new Error('Gagal mengambil data');
                 const csvText = await response.text();
                 return parseCSV(csvText);
             } catch (error) {
@@ -615,7 +265,6 @@
             }
         }
 
-        // Helper Parser CSV ke Array
         function parseCSV(text) {
             const lines = text.split('\n');
             return lines.map(line => {
@@ -630,255 +279,176 @@
             });
         }
 
-        // Format Angka ke Rupiah
         function formatRp(num) {
             const parsed = parseFloat(num);
             if (isNaN(parsed)) return '0';
             return parsed.toLocaleString('id-ID');
         }
 
-        // Parse Nilai Angka dari Teks Rupiah/String
         function cleanNumber(str) {
             if (!str) return 0;
             const cleaned = str.toString().replace(/[^0-9.-]+/g, '');
             return parseFloat(cleaned) || 0;
         }
 
-        // -------------------------------------------------------------
-        // 2. LOGIKA SINKRONISASI DATA KE DASHBOARD & TABEL
-        // -------------------------------------------------------------
         async function fetchRealtimeData() {
-            const refreshBtn = document.getElementById('refreshBtn');
             const refreshIcon = document.getElementById('refreshIcon');
-            const syncPulse = document.getElementById('syncPulse');
-            const syncStatusText = document.getElementById('syncStatusText');
-            const lastUpdated = document.getElementById('lastUpdated');
-
-            // Indikator Loading
             if (refreshIcon) refreshIcon.classList.add('fa-spin');
-            if (syncPulse) syncPulse.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
-            if (syncStatusText) syncStatusText.innerText = 'Menghubungkan...';
 
-            // Fetch dari 3 Sheet Utama
             const dataBukuKas = await fetchSheetData('Buku Kas IPL');
             const dataOps = await fetchSheetData('Laporan Operasional');
             const dataRAB = await fetchSheetData('RAB IPL');
 
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-
-            if (dataBukuKas || dataOps || dataRAB) {
-                // Toast & Indikator Sukses
-                showToast('Data berhasil disinkronisasi secara real-time dari Google Sheets!');
-                if (syncPulse) syncPulse.className = 'w-2 h-2 rounded-full bg-emerald-400';
-                if (syncStatusText) syncStatusText.innerText = 'Terhubung ke Google Sheets';
-                if (lastUpdated) lastUpdated.innerText = `(${timeString})`;
-
-                // Render Komponen Dashboard jika data tersedia
-                if (dataBukuKas) renderBukuKasTable(dataBukuKas);
-                if (dataOps) renderOperasionalTable(dataOps);
-                renderChartsAndKPIs(dataBukuKas, dataRAB);
-            } else {
-                if (syncPulse) syncPulse.className = 'w-2 h-2 rounded-full bg-rose-500';
-                if (syncStatusText) syncStatusText.innerText = 'Gagal Sync (Memakai Fallback Local)';
-            }
+            if (dataBukuKas) renderBukuKasTable(dataBukuKas);
+            if (dataOps) renderOperasionalTable(dataOps);
+            if (dataRAB) renderRABTable(dataRAB);
+            renderCharts();
 
             if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+            showToast('Data berhasil disinkronisasi real-time dari Google Sheets!');
         }
 
-        // -------------------------------------------------------------
-        // 3. RENDER TABEL BUKU KAS IPL (REKAP BULANAN)
-        // -------------------------------------------------------------
         function renderBukuKasTable(rows) {
             const tbody = document.querySelector('#tablePenerimaan tbody');
             if (!tbody) return;
-
             let html = '';
             rows.forEach((row, index) => {
-                if (index < 5 || !row[0]) return; // Lewati header
-
+                if (index < 5 || !row[0]) return;
                 const bulan = row[0];
                 const ops = cleanNumber(row[1]);
                 const sampah = cleanNumber(row[2]);
                 const totalIn = cleanNumber(row[3]);
                 const totalOut = cleanNumber(row[4]);
                 const saldo = cleanNumber(row[5]);
-
-                if (bulan.includes('TOTAL') || bulan.includes('JUMLAH')) return;
-
-                const isSaldoAwal = bulan.toLowerCase().includes('17an') || bulan.toLowerCase().includes('sisa');
+                if (bulan.includes('TOTAL')) return;
 
                 html += `
-                    <tr class="${isSaldoAwal ? 'bg-sky-50/50 font-medium' : 'hover:bg-slate-50 transition-colors'}">
-                        <td class="py-3 px-4 ${isSaldoAwal ? 'text-sky-900 font-bold' : 'font-bold text-slate-900'}">
-                            ${isSaldoAwal ? '<i class="fa-solid fa-circle-info text-sky-600 mr-1.5"></i> ' : ''}${bulan}
-                        </td>
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3 px-4 font-bold text-slate-900">${bulan}</td>
                         <td class="py-3 px-4 text-right">${ops > 0 ? formatRp(ops) : '-'}</td>
                         <td class="py-3 px-4 text-right">${sampah > 0 ? formatRp(sampah) : '-'}</td>
-                        <td class="py-3 px-4 text-right font-bold text-emerald-700">${totalIn > 0 ? formatRp(totalIn) : '0'}</td>
-                        <td class="py-3 px-4 text-right text-rose-600 font-semibold">${totalOut > 0 ? formatRp(totalOut) : '0'}</td>
+                        <td class="py-3 px-4 text-right font-bold text-emerald-700">${formatRp(totalIn)}</td>
+                        <td class="py-3 px-4 text-right text-rose-600 font-semibold">${formatRp(totalOut)}</td>
                         <td class="py-3 px-4 text-right font-bold text-slate-900">${formatRp(saldo)}</td>
                     </tr>
                 `;
             });
-
-            if (html !== '') tbody.innerHTML = html;
+            tbody.innerHTML = html;
         }
 
-        // -------------------------------------------------------------
-        // 4. RENDER TABEL LAPORAN OPERASIONAL (MUTASI KAS)
-        // -------------------------------------------------------------
         function renderOperasionalTable(rows) {
             const tbody = document.querySelector('#tableOps tbody');
             if (!tbody) return;
-
             let html = '';
             rows.forEach((row, index) => {
                 if (index < 4 || !row[0]) return;
-
                 const trxNo = row[0];
                 const tgl = row[1] || '-';
-                const coa = row[2] || 'Operasional';
+                const coa = row[2] || '';
                 const ket = row[3] || '-';
                 const debit = cleanNumber(row[4]);
                 const kredit = cleanNumber(row[5]);
                 const saldo = cleanNumber(row[6]);
-
                 if (trxNo.includes('TOTAL')) return;
 
-                const isDebit = debit > 0;
-                const badgeColor = coa.toLowerCase().includes('admin') ? 'bg-emerald-100 text-emerald-800' : 'bg-sky-100 text-sky-800';
-
                 html += `
-                    <tr class="hover:bg-slate-50 transition-colors">
+                    <tr class="hover:bg-slate-50">
                         <td class="py-3 px-4 font-mono font-bold text-slate-500">${trxNo}</td>
                         <td class="py-3 px-4">${tgl}</td>
-                        <td class="py-3 px-4"><span class="${badgeColor} text-[11px] font-bold px-2 py-0.5 rounded-full">${coa}</span></td>
+                        <td class="py-3 px-4"><span class="bg-sky-100 text-sky-800 text-[11px] font-bold px-2 py-0.5 rounded-full">${coa}</span></td>
                         <td class="py-3 px-4 font-medium text-slate-900">${ket}</td>
-                        <td class="py-3 px-4 text-right ${isDebit ? 'font-bold text-emerald-700' : 'text-slate-400'}">${isDebit ? formatRp(debit) : '-'}</td>
-                        <td class="py-3 px-4 text-right ${kredit > 0 ? 'font-bold text-rose-600' : 'text-slate-400'}">${kredit > 0 ? formatRp(kredit) : '-'}</td>
+                        <td class="py-3 px-4 text-right font-bold text-emerald-700">${debit > 0 ? formatRp(debit) : '-'}</td>
+                        <td class="py-3 px-4 text-right font-bold text-rose-600">${kredit > 0 ? formatRp(kredit) : '-'}</td>
                         <td class="py-3 px-4 text-right font-bold text-slate-900">${saldo > 0 ? formatRp(saldo) : '-'}</td>
                     </tr>
                 `;
             });
-
-            if (html !== '') tbody.innerHTML = html;
+            tbody.innerHTML = html;
         }
 
-        // -------------------------------------------------------------
-        // 5. RENDER CHARTS & KPI CARDS DARI DATA REAL-TIME
-        // -------------------------------------------------------------
-        function renderChartsAndKPIs(dataBukuKas, dataRAB) {
+        function renderRABTable(rows) {
+            const tbody = document.querySelector('#tableRAB tbody');
+            if (!tbody) return;
+            let html = '';
+            rows.forEach((row, index) => {
+                if (index < 5 || !row[0]) return;
+                const no = row[0];
+                const kategori = row[1] || '';
+                const uraian = row[2] || '';
+                const vol = row[3] || '';
+                const satuan = row[4] || '';
+                const harga = cleanNumber(row[5]);
+                const action = row[6] || '';
+                const total = cleanNumber(row[7]);
+                const ket = row[8] || '';
+
+                if (!no || no.toUpperCase().includes('TOTAL')) return;
+
+                html += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3 px-4 font-bold text-slate-400">${no}</td>
+                        <td class="py-3 px-4 font-semibold text-slate-800">${kategori}</td>
+                        <td class="py-3 px-4 text-slate-900">${uraian}</td>
+                        <td class="py-3 px-4 text-center">${vol}</td>
+                        <td class="py-3 px-4">${satuan}</td>
+                        <td class="py-3 px-4 text-right">${formatRp(harga)}</td>
+                        <td class="py-3 px-4 text-center"><span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">${action}</span></td>
+                        <td class="py-3 px-4 text-right font-bold text-emerald-700">${formatRp(total)}</td>
+                        <td class="py-3 px-4 text-xs text-slate-500">${ket}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function renderCharts() {
             const ctxCashflow = document.getElementById('cashflowChart');
             if (ctxCashflow) {
                 if (cashflowChartInstance) cashflowChartInstance.destroy();
-
                 cashflowChartInstance = new Chart(ctxCashflow, {
                     type: 'bar',
                     data: {
                         labels: ['Okt 26', 'Nov 26', 'Des 26', 'Jan 27', 'Feb 27', 'Mar 27'],
                         datasets: [
-                            {
-                                label: 'Pemasukan (Rp)',
-                                data: [2603000, 300000, 0, 0, 0, 0],
-                                backgroundColor: '#0f5132',
-                                borderRadius: 6
-                            },
-                            {
-                                label: 'Pengeluaran (Rp)',
-                                data: [1539000, 0, 0, 0, 0, 0],
-                                backgroundColor: '#e11d48',
-                                borderRadius: 6
-                            }
+                            { label: 'Pemasukan (Rp)', data: [2603000, 300000, 0, 0, 0, 0], backgroundColor: '#0f5132', borderRadius: 6 },
+                            { label: 'Pengeluaran (Rp)', data: [1539000, 0, 0, 0, 0, 0], backgroundColor: '#e11d48', borderRadius: 6 }
                         ]
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'bottom' }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: value => 'Rp ' + (value / 1000) + 'k'
-                                }
-                            }
-                        }
-                    }
+                    options: { responsive: true, maintainAspectRatio: false }
                 });
             }
 
             const ctxRab = document.getElementById('rabChart');
             if (ctxRab) {
                 if (rabChartInstance) rabChartInstance.destroy();
-
                 rabChartInstance = new Chart(ctxRab, {
                     type: 'doughnut',
                     data: {
-                        labels: ['Kebersihan & Sampah', 'Keamanan & Guard', 'Fasum & Perbaikan', 'Kas Operational'],
-                        datasets: [{
-                            data: [12540000, 7200000, 3600000, 2400000],
-                            backgroundColor: ['#0f5132', '#800020', '#dfa510', '#0284c7']
-                        }]
+                        labels: ['Kebersihan & Sampah', 'Keamanan & Guard', 'Fasum & Perbaikan'],
+                        datasets: [{ data: [150000, 3079980, 1056990], backgroundColor: ['#0f5132', '#800020', '#dfa510'] }]
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'bottom' }
-                        }
-                    }
+                    options: { responsive: true, maintainAspectRatio: false }
                 });
             }
         }
 
-        // -------------------------------------------------------------
-        // 6. HELPER SCRIPT: TAB NAVIGATION, FILTER & TOAST
-        // -------------------------------------------------------------
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.className = 'tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all text-slate-600 hover:bg-slate-100';
             });
-
-            const targetTab = document.getElementById(tabId);
-            const targetBtn = document.getElementById(`btn-${tabId}`);
-            if (targetTab) targetTab.classList.remove('hidden');
-            if (targetBtn) targetBtn.className = 'tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all bg-brand-maroon text-white shadow-sm';
-        }
-
-        function filterTable(inputId, tableId) {
-            const input = document.getElementById(inputId);
-            const filter = input.value.toLowerCase();
-            const table = document.getElementById(tableId);
-            const rows = table.getElementsByTagName('tr');
-
-            for (let i = 1; i < rows.length; i++) {
-                let text = rows[i].textContent || rows[i].innerText;
-                if (text.toLowerCase().indexOf(filter) > -1) {
-                    rows[i].style.display = '';
-                } else {
-                    rows[i].style.display = 'none';
-                }
-            }
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(`btn-${tabId}`).className = 'tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all bg-brand-maroon text-white shadow-sm';
         }
 
         function showToast(msg) {
             const toast = document.getElementById('toastNotification');
-            const toastMsg = document.getElementById('toastMessage');
-            if (toast && toastMsg) {
-                toastMsg.innerText = msg;
-                toast.classList.remove('hidden');
-                setTimeout(() => toast.classList.add('hidden'), 4000);
-            }
+            document.getElementById('toastMessage').innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 4000);
         }
 
-        // Jalankan Otomatis Saat Web Dibuka
-        window.addEventListener('DOMContentLoaded', () => {
-            fetchRealtimeData();
-        });
+        window.addEventListener('DOMContentLoaded', () => { fetchRealtimeData(); });
     </script>
 </body>
 </html>
