@@ -1,519 +1,196 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Keuangan Real-Time GP6 - Cluster Green Primera 6</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Google Fonts Inter & Plus Jakarta Sans -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            maroon: '#800020',
-                            maroonDark: '#5c0017',
-                            green: '#0f5132',
-                            greenLight: '#d1e7dd',
-                            gold: '#dfa510'
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
-                    }
-                }
+<script>
+    const SPREADSHEET_ID = '1-tDw5FVxGm59QORzgkZle2dYpQfF5hTxtcb8H30DX3c';
+    let cashflowChartInstance = null;
+    let rabChartInstance = null;
+
+    async function fetchSheetData(sheetName) {
+        const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`Gagal mengambil data sheet: ${sheetName}`);
+            const csvText = await response.text();
+            return parseCSV(csvText);
+        } catch (error) {
+            console.error(`Error fetching sheet [${sheetName}]:`, error);
+            return null;
+        }
+    }
+
+    function parseCSV(text) {
+        const lines = text.split('\n');
+        return lines.map(line => {
+            const regex = /(?:^|,)(?:"([^"]*)"|([^,]*))/g;
+            const row = [];
+            let match;
+            while ((match = regex.exec(line)) !== null) {
+                let val = match[1] !== undefined ? match[1] : match[2];
+                row.push(val ? val.trim() : '');
             }
-        }
-    </script>
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-            height: 6px;
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-    </style>
-</head>
-<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col">
+            return row;
+        });
+    }
 
-    <!-- Top Navigation Header -->
-    <header class="bg-gradient-to-r from-brand-maroonDark via-brand-maroon to-emerald-900 text-white shadow-xl sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                
-                <!-- Logo & Title -->
-                <div class="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-start">
-                    <div class="flex items-center space-x-3">
-                        <div class="bg-white/10 p-2.5 rounded-xl backdrop-blur-md border border-white/20 shadow-inner">
-                            <i class="fa-solid fa-house-circle-check text-2xl text-emerald-300"></i>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight">Keuangan GP6</h1>
-                                <span class="bg-emerald-500/20 text-emerald-300 text-xs px-2 py-0.5 rounded-full border border-emerald-400/30 font-semibold">Real-Time</span>
-                            </div>
-                            <p class="text-xs text-rose-100/80 font-medium">Cluster Green Primera 6 (19 KK: A1-A5, B1-B7, C1-C7)</p>
-                        </div>
-                    </div>
-                </div>
+    function formatRp(num) {
+        const parsed = parseFloat(num);
+        if (isNaN(parsed)) return 'Rp 0';
+        return 'Rp ' + Math.round(parsed).toLocaleString('id-ID');
+    }
 
-                <!-- Controls & Actions -->
-                <div class="flex items-center gap-3 w-full md:w-auto justify-end">
-                    <div class="hidden md:flex items-center gap-2 text-xs bg-white/10 px-3 py-1.5 rounded-xl border border-white/10">
-                        <span id="syncPulse" class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                        <span id="syncStatusText" class="text-emerald-100 font-medium">Terhubung ke Google Sheets</span>
-                        <span id="lastUpdated" class="text-rose-200/70 text-[11px] ml-1">(-)--:--</span>
-                    </div>
+    function cleanNumber(str) {
+        if (!str) return 0;
+        const cleaned = str.toString().replace(/[^0-9.-]+/g, '');
+        return parseFloat(cleaned) || 0;
+    }
 
-                    <button onclick="fetchRealtimeData()" id="refreshBtn" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-950/20">
-                        <i id="refreshIcon" class="fa-solid fa-rotate-right"></i>
-                        <span>Sync Data</span>
-                    </button>
+    async function fetchRealtimeData() {
+        const refreshIcon = document.getElementById('refreshIcon');
+        const lastUpdated = document.getElementById('lastUpdated');
+        if (refreshIcon) refreshIcon.classList.add('fa-spin');
 
-                    <a href="https://docs.google.com/spreadsheets/d/1-tDw5FVxGm59QORzgkZle2dYpQfF5hTxtcb8H30DX3c/edit" target="_blank" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 active:scale-95 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition-all border border-white/20">
-                        <i class="fa-solid fa-file-excel text-emerald-300"></i>
-                        <span class="hidden sm:inline">Buka Sheets</span>
-                    </a>
-                </div>
+        const dataBukuKas = await fetchSheetData('Buku Kas IPL');
+        const dataOps = await fetchSheetData('Laporan Operasional');
+        const dataRAB = await fetchSheetData('RAB IPL');
 
-            </div>
-        </div>
-    </header>
+        let totalIn = 0, totalOut = 0, saldoKas = 0, totalRAB = 0;
 
-    <!-- Main Workspace -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full space-y-6">
+        if (dataBukuKas) totalIn = renderBukuKasTable(dataBukuKas);
+        if (dataOps) totalOut = renderOperasionalTable(dataOps);
+        if (dataRAB) totalRAB = renderRABTable(dataRAB);
 
-        <!-- Banner Toast Notification -->
-        <div id="toastNotification" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl shadow-sm flex items-center justify-between text-xs sm:text-sm">
-            <div class="flex items-center gap-2">
-                <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
-                <span id="toastMessage">Data berhasil disinkronisasi secara real-time dari Google Sheets!</span>
-            </div>
-            <button onclick="document.getElementById('toastNotification').classList.add('hidden')" class="text-emerald-500 hover:text-emerald-700">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
+        saldoKas = totalIn - totalOut;
+        const sisaRAB = totalRAB - totalOut;
 
-        <!-- KPI SUMMARY CARDS -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-            <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200/80">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Pemasukan Kas</span>
-                <h3 id="kpiTotalPemasukan" class="text-2xl font-black text-slate-900 mt-2">Rp 0</h3>
-            </div>
-            <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200/80">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Pengeluaran</span>
-                <h3 id="kpiTotalPengeluaran" class="text-2xl font-black text-slate-900 mt-2">Rp 0</h3>
-            </div>
-            <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200/80">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Saldo Kas Berjalan</span>
-                <h3 id="kpiSaldoKas" class="text-2xl font-black text-sky-700 mt-2">Rp 0</h3>
-            </div>
-            <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200/80">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Sisa Kebutuhan RAB</span>
-                <h3 id="kpiSisaRAB" class="text-2xl font-black text-amber-700 mt-2">Rp 0</h3>
-            </div>
-        </section>
+        // Update Kartu KPI Utama
+        document.getElementById('kpiTotalPemasukan').innerText = formatRp(totalIn);
+        document.getElementById('kpiTotalPengeluaran').innerText = formatRp(totalOut);
+        document.getElementById('kpiSaldoKas').innerText = formatRp(saldoKas);
+        document.getElementById('kpiSisaRAB').innerText = formatRp(sisaRAB > 0 ? sisaRAB : 0);
 
-        <!-- NAVIGATION TABS -->
-        <div class="border-b border-slate-200 bg-white rounded-2xl p-2 shadow-sm flex flex-nowrap overflow-x-auto custom-scrollbar gap-1 text-xs sm:text-sm font-semibold">
-            <button onclick="switchTab('tab-dashboard')" id="btn-tab-dashboard" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all bg-brand-maroon text-white shadow-sm">
-                <i class="fa-solid fa-chart-line"></i><span>Ringkasan & Visualisasi</span>
-            </button>
-            <button onclick="switchTab('tab-penerimaan')" id="btn-tab-penerimaan" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all text-slate-600 hover:bg-slate-100">
-                <i class="fa-solid fa-calendar-check"></i><span>Buku Kas IPL (Iuran)</span>
-            </button>
-            <button onclick="switchTab('tab-operasional')" id="btn-tab-operasional" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all text-slate-600 hover:bg-slate-100">
-                <i class="fa-solid fa-receipt"></i><span>Laporan Operasional</span>
-            </button>
-            <button onclick="switchTab('tab-rab')" id="btn-tab-rab" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all text-slate-600 hover:bg-slate-100">
-                <i class="fa-solid fa-list-check"></i><span>Rencana Anggaran (RAB)</span>
-            </button>
-        </div>
-
-        <!-- TAB CONTENT 1: DASHBOARD -->
-        <div id="tab-dashboard" class="tab-content space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 lg:col-span-2 flex flex-col">
-                    <h3 class="font-bold text-slate-800 text-base mb-4"><i class="fa-solid fa-chart-column text-brand-maroon"></i> Laju Arus Kas Bulanan</h3>
-                    <div class="relative flex-grow h-72"><canvas id="cashflowChart"></canvas></div>
-                </div>
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
-                    <h3 class="font-bold text-slate-800 text-base mb-4"><i class="fa-solid fa-chart-pie text-emerald-600"></i> Alokasi Anggaran RAB</h3>
-                    <div class="relative flex-grow h-72 flex items-center justify-center"><canvas id="rabChart"></canvas></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB CONTENT 2: BUKU KAS IPL -->
-        <div id="tab-penerimaan" class="tab-content hidden space-y-4">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="p-4 sm:p-5 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                    <h3 class="font-bold text-slate-800 text-base">Rekap Pemasukan Kas & Iuran IPL Bulanan</h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table id="tablePenerimaan" class="w-full text-left border-collapse text-xs sm:text-sm">
-                        <thead>
-                            <tr class="bg-slate-100 text-slate-600 uppercase text-[11px] font-bold border-b">
-                                <th class="py-3 px-4">Bulan / Sumber</th>
-                                <th class="py-3 px-4 text-right">Operasional (Rp)</th>
-                                <th class="py-3 px-4 text-right">Sampah (Rp)</th>
-                                <th class="py-3 px-4 text-right">Total Pemasukan (Rp)</th>
-                                <th class="py-3 px-4 text-right">Pengeluaran Kas (Rp)</th>
-                                <th class="py-3 px-4 text-right">Saldo Kas Bulanan (Rp)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 text-slate-700"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB CONTENT 3: LAPORAN OPERASIONAL -->
-        <div id="tab-operasional" class="tab-content hidden space-y-4">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="p-4 sm:p-5 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                    <h3 class="font-bold text-slate-800 text-base">Jurnal Mutasi Arus Kas Operasional</h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table id="tableOps" class="w-full text-left border-collapse text-xs sm:text-sm">
-                        <thead>
-                            <tr class="bg-slate-100 text-slate-600 uppercase text-[11px] font-bold border-b">
-                                <th class="py-3 px-4">No. TRX</th>
-                                <th class="py-3 px-4">Tanggal</th>
-                                <th class="py-3 px-4">Kode Akun (COA)</th>
-                                <th class="py-3 px-4">Keterangan / Uraian Transaksi</th>
-                                <th class="py-3 px-4 text-right">Debit / Masuk (Rp)</th>
-                                <th class="py-3 px-4 text-right">Kredit / Keluar (Rp)</th>
-                                <th class="py-3 px-4 text-right">Saldo Akhir (Rp)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 text-slate-700"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB CONTENT 4: RENCANA ANGGARAN (RAB IPL) -->
-        <div id="tab-rab" class="tab-content hidden space-y-4">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="p-4 sm:p-5 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                    <h3 class="font-bold text-slate-800 text-base">Rencana Anggaran Biaya (RAB) IPL</h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table id="tableRAB" class="w-full text-left border-collapse text-xs sm:text-sm">
-                        <thead>
-                            <tr class="bg-slate-100 text-slate-600 uppercase text-[11px] font-bold border-b">
-                                <th class="py-3 px-4">No</th>
-                                <th class="py-3 px-4">Kategori</th>
-                                <th class="py-3 px-4">Uraian Kebutuhan</th>
-                                <th class="py-3 px-4 text-center">Vol</th>
-                                <th class="py-3 px-4">Satuan</th>
-                                <th class="py-3 px-4 text-right">Harga Satuan (Rp)</th>
-                                <th class="py-3 px-4 text-center">Status</th>
-                                <th class="py-3 px-4 text-right">Total Anggaran (Rp)</th>
-                                <th class="py-3 px-4">Keterangan</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 text-slate-700"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-slate-900 text-slate-400 text-xs py-6 mt-auto border-t border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 text-center">
-            <p>© 2026 Sistem Informasi Keuangan GP6 - Cluster Green Primera 6</p>
-        </div>
-    </footer>
-
-    <!-- REAL-TIME DATA FETCHING SCRIPT -->
-    <script>
-        const SPREADSHEET_ID = '1-tDw5FVxGm59QORzgkZle2dYpQfF5hTxtcb8H30DX3c';
-        let cashflowChartInstance = null;
-        let rabChartInstance = null;
-
-        async function fetchSheetData(sheetName) {
-            const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('Gagal mengambil data');
-                const csvText = await response.text();
-                return parseCSV(csvText);
-            } catch (error) {
-                console.error(`Error fetching sheet [${sheetName}]:`, error);
-                return null;
-            }
+        if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+        
+        const now = new Date();
+        if (lastUpdated) {
+            lastUpdated.innerText = `(${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')})`;
         }
 
-        function parseCSV(text) {
-            const lines = text.split('\n');
-            return lines.map(line => {
-                const regex = /(?:^|,)(?:"([^"]*)"|([^,]*))/g;
-                const row = [];
-                let match;
-                while ((match = regex.exec(line)) !== null) {
-                    let val = match[1] !== undefined ? match[1] : match[2];
-                    row.push(val ? val.trim() : '');
-                }
-                return row;
-            });
-        }
+        showToast('Data berhasil disinkronisasi real-time dari Google Sheets!');
+    }
 
-        function formatRp(num) {
-            const parsed = parseFloat(num);
-            if (isNaN(parsed)) return 'Rp 0';
-            return 'Rp ' + Math.round(parsed).toLocaleString('id-ID');
-        }
+    function renderBukuKasTable(rows) {
+        const tbody = document.querySelector('#tablePenerimaan tbody');
+        if (!tbody) return 0;
+        let html = '';
+        let totalInSum = 0;
 
-        function cleanNumber(str) {
-            if (!str) return 0;
-            const cleaned = str.toString().replace(/[^0-9.-]+/g, '');
-            return parseFloat(cleaned) || 0;
-        }
+        rows.forEach((row, index) => {
+            if (index < 1 || !row[0]) return;
+            const bulan = row[0];
+            const ops = cleanNumber(row[1]);
+            const sampah = cleanNumber(row[2]);
+            const totalIn = cleanNumber(row[3]);
+            const totalOut = cleanNumber(row[4]);
+            const saldo = cleanNumber(row[5]);
 
-        async function fetchRealtimeData() {
-            const refreshIcon = document.getElementById('refreshIcon');
-            const lastUpdated = document.getElementById('lastUpdated');
-            if (refreshIcon) refreshIcon.classList.add('fa-spin');
+            if (bulan.toUpperCase().includes('TOTAL')) return;
+            totalInSum += totalIn;
 
-            const dataBukuKas = await fetchSheetData('Buku Kas IPL');
-            const dataOps = await fetchSheetData('Laporan Operasional');
-            const dataRAB = await fetchSheetData('RAB IPL');
+            html += `
+                <tr class="hover:bg-slate-50">
+                    <td class="py-3 px-4 font-bold text-slate-900">${bulan}</td>
+                    <td class="py-3 px-4 text-right">${ops > 0 ? formatRp(ops) : '-'}</td>
+                    <td class="py-3 px-4 text-right">${sampah > 0 ? formatRp(sampah) : '-'}</td>
+                    <td class="py-3 px-4 text-right font-bold text-emerald-700">${formatRp(totalIn)}</td>
+                    <td class="py-3 px-4 text-right text-rose-600 font-semibold">${formatRp(totalOut)}</td>
+                    <td class="py-3 px-4 text-right font-bold text-slate-900">${formatRp(saldo)}</td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html || '<tr><td colspan="6" class="text-center py-4 text-slate-400">Tidak ada data</td></tr>';
+        return totalInSum;
+    }
 
-            let totalIn = 0, totalOut = 0, saldoKas = 0, totalRAB = 0;
+    function renderOperasionalTable(rows) {
+        const tbody = document.querySelector('#tableOps tbody');
+        if (!tbody) return 0;
+        let html = '';
+        let totalOutSum = 0;
 
-            if (dataBukuKas) {
-                totalIn = renderBukuKasTable(dataBukuKas);
-            }
-            if (dataOps) {
-                totalOut = renderOperasionalTable(dataOps);
-            }
-            if (dataRAB) {
-                totalRAB = renderRABTable(dataRAB);
-            }
+        rows.forEach((row, index) => {
+            if (index < 1 || !row[0]) return;
+            const trxNo = row[0];
+            const tgl = row[1] || '-';
+            const coa = row[2] || '';
+            const ket = row[3] || '-';
+            const debit = cleanNumber(row[4]);
+            const kredit = cleanNumber(row[5]);
+            const saldo = cleanNumber(row[6]);
 
-            saldoKas = totalIn - totalOut;
-            const sisaRAB = totalRAB - totalOut;
+            if (trxNo.toUpperCase().includes('TOTAL')) return;
+            totalOutSum += kredit;
 
-            // Update KPI Cards
-            document.getElementById('kpiTotalPemasukan').innerText = formatRp(totalIn);
-            document.getElementById('kpiTotalPengeluaran').innerText = formatRp(totalOut);
-            document.getElementById('kpiSaldoKas').innerText = formatRp(saldoKas);
-            document.getElementById('kpiSisaRAB').innerText = formatRp(sisaRAB > 0 ? sisaRAB : 0);
+            html += `
+                <tr class="hover:bg-slate-50">
+                    <td class="py-3 px-4 font-mono font-bold text-slate-500">${trxNo}</td>
+                    <td class="py-3 px-4">${tgl}</td>
+                    <td class="py-3 px-4"><span class="bg-sky-100 text-sky-800 text-[11px] font-bold px-2 py-0.5 rounded-full">${coa}</span></td>
+                    <td class="py-3 px-4 font-medium text-slate-900">${ket}</td>
+                    <td class="py-3 px-4 text-right font-bold text-emerald-700">${debit > 0 ? formatRp(debit) : '-'}</td>
+                    <td class="py-3 px-4 text-right font-bold text-rose-600">${kredit > 0 ? formatRp(kredit) : '-'}</td>
+                    <td class="py-3 px-4 text-right font-bold text-slate-900">${saldo > 0 ? formatRp(saldo) : '-'}</td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html || '<tr><td colspan="7" class="text-center py-4 text-slate-400">Tidak ada data</td></tr>';
+        return totalOutSum;
+    }
 
-            // Render Charts
-            renderCharts(dataBukuKas, dataRAB);
+    function renderRABTable(rows) {
+        const tbody = document.querySelector('#tableRAB tbody');
+        if (!tbody) return 0;
+        let html = '';
+        let totalRABSum = 0;
 
-            if (refreshIcon) refreshIcon.classList.remove('fa-spin');
-            
-            const now = new Date();
-            if (lastUpdated) {
-                lastUpdated.innerText = `(${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')})`;
-            }
+        rows.forEach((row, index) => {
+            if (index < 1 || !row[0]) return;
+            const no = row[0];
+            const kategori = row[1] || '';
+            const uraian = row[2] || '';
+            const vol = row[3] || '';
+            const satuan = row[4] || '';
+            const harga = cleanNumber(row[5]);
+            const action = row[6] || '';
+            const total = cleanNumber(row[7]);
+            const ket = row[8] || '';
 
-            showToast('Data berhasil disinkronisasi real-time dari Google Sheets!');
-        }
+            if (!no || no.toUpperCase().includes('TOTAL')) return;
+            totalRABSum += total;
 
-        function renderBukuKasTable(rows) {
-            const tbody = document.querySelector('#tablePenerimaan tbody');
-            if (!tbody) return 0;
-            let html = '';
-            let totalInSum = 0;
+            html += `
+                <tr class="hover:bg-slate-50">
+                    <td class="py-3 px-4 font-bold text-slate-400">${no}</td>
+                    <td class="py-3 px-4 font-semibold text-slate-800">${kategori}</td>
+                    <td class="py-3 px-4 text-slate-900">${uraian}</td>
+                    <td class="py-3 px-4 text-center">${vol}</td>
+                    <td class="py-3 px-4">${satuan}</td>
+                    <td class="py-3 px-4 text-right">${formatRp(harga)}</td>
+                    <td class="py-3 px-4 text-center"><span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">${action}</span></td>
+                    <td class="py-3 px-4 text-right font-bold text-emerald-700">${formatRp(total)}</td>
+                    <td class="py-3 px-4 text-xs text-slate-500">${ket}</td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html || '<tr><td colspan="9" class="text-center py-4 text-slate-400">Tidak ada data</td></tr>';
+        return totalRABSum;
+    }
 
-            rows.forEach((row, index) => {
-                if (index < 5 || !row[0]) return;
-                const bulan = row[0];
-                const ops = cleanNumber(row[1]);
-                const sampah = cleanNumber(row[2]);
-                const totalIn = cleanNumber(row[3]);
-                const totalOut = cleanNumber(row[4]);
-                const saldo = cleanNumber(row[5]);
-
-                if (bulan.toUpperCase().includes('TOTAL')) return;
-
-                totalInSum += totalIn;
-
-                html += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="py-3 px-4 font-bold text-slate-900">${bulan}</td>
-                        <td class="py-3 px-4 text-right">${ops > 0 ? formatRp(ops) : '-'}</td>
-                        <td class="py-3 px-4 text-right">${sampah > 0 ? formatRp(sampah) : '-'}</td>
-                        <td class="py-3 px-4 text-right font-bold text-emerald-700">${formatRp(totalIn)}</td>
-                        <td class="py-3 px-4 text-right text-rose-600 font-semibold">${formatRp(totalOut)}</td>
-                        <td class="py-3 px-4 text-right font-bold text-slate-900">${formatRp(saldo)}</td>
-                    </tr>
-                `;
-            });
-            tbody.innerHTML = html;
-            return totalInSum;
-        }
-
-        function renderOperasionalTable(rows) {
-            const tbody = document.querySelector('#tableOps tbody');
-            if (!tbody) return 0;
-            let html = '';
-            let totalOutSum = 0;
-
-            rows.forEach((row, index) => {
-                if (index < 4 || !row[0]) return;
-                const trxNo = row[0];
-                const tgl = row[1] || '-';
-                const coa = row[2] || '';
-                const ket = row[3] || '-';
-                const debit = cleanNumber(row[4]);
-                const kredit = cleanNumber(row[5]);
-                const saldo = cleanNumber(row[6]);
-
-                if (trxNo.toUpperCase().includes('TOTAL')) return;
-
-                totalOutSum += kredit;
-
-                html += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="py-3 px-4 font-mono font-bold text-slate-500">${trxNo}</td>
-                        <td class="py-3 px-4">${tgl}</td>
-                        <td class="py-3 px-4"><span class="bg-sky-100 text-sky-800 text-[11px] font-bold px-2 py-0.5 rounded-full">${coa}</span></td>
-                        <td class="py-3 px-4 font-medium text-slate-900">${ket}</td>
-                        <td class="py-3 px-4 text-right font-bold text-emerald-700">${debit > 0 ? formatRp(debit) : '-'}</td>
-                        <td class="py-3 px-4 text-right font-bold text-rose-600">${kredit > 0 ? formatRp(kredit) : '-'}</td>
-                        <td class="py-3 px-4 text-right font-bold text-slate-900">${saldo > 0 ? formatRp(saldo) : '-'}</td>
-                    </tr>
-                `;
-            });
-            tbody.innerHTML = html;
-            return totalOutSum;
-        }
-
-        function renderRABTable(rows) {
-            const tbody = document.querySelector('#tableRAB tbody');
-            if (!tbody) return 0;
-            let html = '';
-            let totalRABSum = 0;
-
-            rows.forEach((row, index) => {
-                // Lewati judul header
-                if (index < 5 || !row[0]) return;
-                
-                const no = row[0];
-                const kategori = row[1] || '';
-                const uraian = row[2] || '';
-                const vol = row[3] || '';
-                const satuan = row[4] || '';
-                const harga = cleanNumber(row[5]);
-                const action = row[6] || '';
-                const total = cleanNumber(row[7]);
-                const ket = row[8] || '';
-
-                if (!no || no.toUpperCase().includes('TOTAL')) return;
-
-                totalRABSum += total;
-
-                html += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="py-3 px-4 font-bold text-slate-400">${no}</td>
-                        <td class="py-3 px-4 font-semibold text-slate-800">${kategori}</td>
-                        <td class="py-3 px-4 text-slate-900">${uraian}</td>
-                        <td class="py-3 px-4 text-center">${vol}</td>
-                        <td class="py-3 px-4">${satuan}</td>
-                        <td class="py-3 px-4 text-right">${formatRp(harga)}</td>
-                        <td class="py-3 px-4 text-center"><span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">${action}</span></td>
-                        <td class="py-3 px-4 text-right font-bold text-emerald-700">${formatRp(total)}</td>
-                        <td class="py-3 px-4 text-xs text-slate-500">${ket}</td>
-                    </tr>
-                `;
-            });
-            tbody.innerHTML = html;
-            return totalRABSum;
-        }
-
-        function renderCharts(dataBukuKas, dataRAB) {
-            const ctxCashflow = document.getElementById('cashflowChart');
-            if (ctxCashflow) {
-                if (cashflowChartInstance) cashflowChartInstance.destroy();
-
-                let labels = ['Okt 26', 'Nov 26', 'Des 26', 'Jan 27', 'Feb 27', 'Mar 27'];
-                let inData = [2603000, 300000, 0, 0, 0, 0];
-                let outData = [1539000, 0, 0, 0, 0, 0];
-
-                cashflowChartInstance = new Chart(ctxCashflow, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            { label: 'Pemasukan (Rp)', data: inData, backgroundColor: '#0f5132', borderRadius: 6 },
-                            { label: 'Pengeluaran (Rp)', data: outData, backgroundColor: '#e11d48', borderRadius: 6 }
-                        ]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false }
-                });
-            }
-
-            const ctxRab = document.getElementById('rabChart');
-            if (ctxRab) {
-                if (rabChartInstance) rabChartInstance.destroy();
-
-                let categories = {};
-                if (dataRAB && dataRAB.length > 5) {
-                    dataRAB.forEach((row, i) => {
-                        if (i >= 5 && row[1] && row[7]) {
-                            const cat = row[1];
-                            const val = cleanNumber(row[7]);
-                            categories[cat] = (categories[cat] || 0) + val;
-                        }
-                    });
-                }
-
-                let labels = Object.keys(categories).length > 0 ? Object.keys(categories) : ['Pengelolaan Kebersihan', 'Operasional & Fasum'];
-                let values = Object.values(categories).length > 0 ? Object.values(categories) : [150000, 4136970];
-
-                rabChartInstance = new Chart(ctxRab, {
-                    type: 'doughnut',
-                    data: {
-                        labels: labels,
-                        datasets: [{ data: values, backgroundColor: ['#0f5132', '#800020', '#dfa510', '#0284c7'] }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false }
-                });
-            }
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.className = 'tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all text-slate-600 hover:bg-slate-100';
-            });
-            document.getElementById(tabId).classList.remove('hidden');
-            document.getElementById(`btn-${tabId}`).className = 'tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all bg-brand-maroon text-white shadow-sm';
-        }
-
-        function showToast(msg) {
-            const toast = document.getElementById('toastNotification');
+    function showToast(msg) {
+        const toast = document.getElementById('toastNotification');
+        if(toast) {
             document.getElementById('toastMessage').innerText = msg;
             toast.classList.remove('hidden');
             setTimeout(() => toast.classList.add('hidden'), 4000);
         }
+    }
 
-        window.addEventListener('DOMContentLoaded', () => { fetchRealtimeData(); });
-    </script>
-</body>
-</html>
+    window.addEventListener('DOMContentLoaded', () => { fetchRealtimeData(); });
+</script>
