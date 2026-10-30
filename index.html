@@ -1,196 +1,245 @@
-<script>
-    const SPREADSHEET_ID = '1-tDw5FVxGm59QORzgkZle2dYpQfF5hTxtcb8H30DX3c';
-    let cashflowChartInstance = null;
-    let rabChartInstance = null;
-
-    async function fetchSheetData(sheetName) {
-        const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`Gagal mengambil data sheet: ${sheetName}`);
-            const csvText = await response.text();
-            return parseCSV(csvText);
-        } catch (error) {
-            console.error(`Error fetching sheet [${sheetName}]:`, error);
-            return null;
-        }
-    }
-
-    function parseCSV(text) {
-        const lines = text.split('\n');
-        return lines.map(line => {
-            const regex = /(?:^|,)(?:"([^"]*)"|([^,]*))/g;
-            const row = [];
-            let match;
-            while ((match = regex.exec(line)) !== null) {
-                let val = match[1] !== undefined ? match[1] : match[2];
-                row.push(val ? val.trim() : '');
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Keuangan Real-Time GP6 - Cluster Green Primera 6</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            maroon: '#800020',
+                            maroonDark: '#5c0017',
+                            green: '#0f5132',
+                            gold: '#dfa510'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
             }
-            return row;
-        });
-    }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col">
 
-    function formatRp(num) {
-        const parsed = parseFloat(num);
-        if (isNaN(parsed)) return 'Rp 0';
-        return 'Rp ' + Math.round(parsed).toLocaleString('id-ID');
-    }
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-brand-maroonDark via-brand-maroon to-emerald-900 text-white shadow-xl sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-start">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-white/10 p-2.5 rounded-xl border border-white/20">
+                            <i class="fa-solid fa-house-circle-check text-2xl text-emerald-300"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight">Keuangan GP6</h1>
+                                <span class="bg-emerald-500/20 text-emerald-300 text-xs px-2 py-0.5 rounded-full border border-emerald-400/30 font-semibold">Real-Time</span>
+                            </div>
+                            <p class="text-xs text-rose-100/80 font-medium">Cluster Green Primera 6 (19 KK)</p>
+                        </div>
+                    </div>
+                </div>
 
-    function cleanNumber(str) {
-        if (!str) return 0;
-        const cleaned = str.toString().replace(/[^0-9.-]+/g, '');
-        return parseFloat(cleaned) || 0;
-    }
+                <div class="flex items-center gap-3">
+                    <div class="hidden md:flex items-center gap-2 text-xs bg-white/10 px-3 py-1.5 rounded-xl border border-white/10">
+                        <span id="syncPulse" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span id="syncStatusText" class="text-emerald-100">Terhubung</span>
+                        <span id="lastUpdated" class="text-rose-200/70 text-[11px] ml-1">(-)</span>
+                    </div>
+                    <button onclick="loadDashboardData()" id="refreshBtn" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-md transition-all">
+                        <i id="refreshIcon" class="fa-solid fa-rotate-right"></i>
+                        <span>Sync Data</span>
+                    </button>
+                    <a href="https://docs.google.com/spreadsheets/d/1-tDw5FVxGm59QORzgkZle2dYpQfF5hTxtcb8H30DX3c/edit" target="_blank" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-3.5 py-2 rounded-xl text-xs font-semibold border border-white/20">
+                        <i class="fa-solid fa-file-excel text-emerald-300"></i>
+                        <span>Buka Sheets</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
 
-    async function fetchRealtimeData() {
-        const refreshIcon = document.getElementById('refreshIcon');
-        const lastUpdated = document.getElementById('lastUpdated');
-        if (refreshIcon) refreshIcon.classList.add('fa-spin');
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full space-y-6">
 
-        const dataBukuKas = await fetchSheetData('Buku Kas IPL');
-        const dataOps = await fetchSheetData('Laporan Operasional');
-        const dataRAB = await fetchSheetData('RAB IPL');
+        <!-- Toast Notification -->
+        <div id="toastNotification" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl shadow-sm flex items-center justify-between text-xs sm:text-sm">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+                <span id="toastMessage">Data berhasil disinkronisasi!</span>
+            </div>
+        </div>
 
-        let totalIn = 0, totalOut = 0, saldoKas = 0, totalRAB = 0;
+        <!-- KPI Cards -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Pemasukan Kas</span>
+                <h3 id="kpiTotalPemasukan" class="text-2xl font-black text-slate-900 mt-2">Rp 3.118.889</h3>
+            </div>
+            <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Pengeluaran</span>
+                <h3 id="kpiTotalPengeluaran" class="text-2xl font-black text-slate-900 mt-2">Rp 1.539.000</h3>
+            </div>
+            <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Saldo Kas Berjalan</span>
+                <h3 id="kpiSaldoKas" class="text-2xl font-black text-sky-700 mt-2">Rp 1.579.889</h3>
+            </div>
+            <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Sisa Kebutuhan RAB</span>
+                <h3 id="kpiSisaRAB" class="text-2xl font-black text-amber-700 mt-2">Rp 24.201.000</h3>
+            </div>
+        </section>
 
-        if (dataBukuKas) totalIn = renderBukuKasTable(dataBukuKas);
-        if (dataOps) totalOut = renderOperasionalTable(dataOps);
-        if (dataRAB) totalRAB = renderRABTable(dataRAB);
+        <!-- Tabs -->
+        <div class="border-b border-slate-200 bg-white rounded-2xl p-2 shadow-sm flex gap-1 text-xs sm:text-sm font-semibold overflow-x-auto">
+            <button onclick="switchTab('tab-dashboard')" id="btn-tab-dashboard" class="tab-btn px-4 py-2.5 rounded-xl bg-brand-maroon text-white shadow-sm">Ringkasan & Grafik</button>
+            <button onclick="switchTab('tab-rab')" id="btn-tab-rab" class="tab-btn px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100">Rencana Anggaran (RAB)</button>
+        </div>
 
-        saldoKas = totalIn - totalOut;
-        const sisaRAB = totalRAB - totalOut;
+        <!-- Tab 1: Dashboard -->
+        <div id="tab-dashboard" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 lg:col-span-2 flex flex-col h-80">
+                    <h3 class="font-bold text-slate-800 text-base mb-4">Laju Arus Kas Bulanan</h3>
+                    <div class="relative flex-grow"><canvas id="cashflowChart"></canvas></div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col h-80">
+                    <h3 class="font-bold text-slate-800 text-base mb-4">Alokasi Anggaran RAB</h3>
+                    <div class="relative flex-grow flex items-center justify-center"><canvas id="rabChart"></canvas></div>
+                </div>
+            </div>
+        </div>
 
-        // Update Kartu KPI Utama
-        document.getElementById('kpiTotalPemasukan').innerText = formatRp(totalIn);
-        document.getElementById('kpiTotalPengeluaran').innerText = formatRp(totalOut);
-        document.getElementById('kpiSaldoKas').innerText = formatRp(saldoKas);
-        document.getElementById('kpiSisaRAB').innerText = formatRp(sisaRAB > 0 ? sisaRAB : 0);
+        <!-- Tab 2: RAB -->
+        <div id="tab-rab" class="tab-content hidden space-y-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-slate-800">Rencana Anggaran Biaya (RAB) IPL</div>
+                <div class="overflow-x-auto">
+                    <table id="tableRAB" class="w-full text-left text-xs sm:text-sm">
+                        <thead class="bg-slate-100 text-slate-600 uppercase text-[11px]">
+                            <tr>
+                                <th class="py-3 px-4">No</th>
+                                <th class="py-3 px-4">Kategori</th>
+                                <th class="py-3 px-4">Uraian Kebutuhan</th>
+                                <th class="py-3 px-4 text-center">Vol</th>
+                                <th class="py-3 px-4 text-right">Harga Satuan (Rp)</th>
+                                <th class="py-3 px-4 text-right">Total Anggaran (Rp)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr><td colspan="6" class="text-center py-4 text-slate-400">Memuat data dari Google Sheets...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-        if (refreshIcon) refreshIcon.classList.remove('fa-spin');
-        
-        const now = new Date();
-        if (lastUpdated) {
-            lastUpdated.innerText = `(${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')})`;
+    </main>
+
+    <!-- Script -->
+    <script>
+        const SPREADSHEET_ID = '1-tDw5FVxGm59QORzgkZle2dYpQfF5hTxtcb8H30DX3c';
+        // Menggunakan public CSV export link via proxy CORS gratis (allorigins / corsproxy) atau endpoint langsung
+        async function fetchCSV(gid) {
+            const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=${gid}`;
+            try {
+                const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+                if (!response.ok) throw new Error('Gagal ambil data');
+                const text = await response.text();
+                return parseCSV(text);
+            } catch (e) {
+                console.error("Fetch error, using fallback direct fetch:", e);
+                try {
+                    const directRes = await fetch(url);
+                    const directText = await directRes.text();
+                    return parseCSV(directText);
+                } catch (err) {
+                    console.error("Direct fetch failed:", err);
+                    return null;
+                }
+            }
         }
 
-        showToast('Data berhasil disinkronisasi real-time dari Google Sheets!');
-    }
-
-    function renderBukuKasTable(rows) {
-        const tbody = document.querySelector('#tablePenerimaan tbody');
-        if (!tbody) return 0;
-        let html = '';
-        let totalInSum = 0;
-
-        rows.forEach((row, index) => {
-            if (index < 1 || !row[0]) return;
-            const bulan = row[0];
-            const ops = cleanNumber(row[1]);
-            const sampah = cleanNumber(row[2]);
-            const totalIn = cleanNumber(row[3]);
-            const totalOut = cleanNumber(row[4]);
-            const saldo = cleanNumber(row[5]);
-
-            if (bulan.toUpperCase().includes('TOTAL')) return;
-            totalInSum += totalIn;
-
-            html += `
-                <tr class="hover:bg-slate-50">
-                    <td class="py-3 px-4 font-bold text-slate-900">${bulan}</td>
-                    <td class="py-3 px-4 text-right">${ops > 0 ? formatRp(ops) : '-'}</td>
-                    <td class="py-3 px-4 text-right">${sampah > 0 ? formatRp(sampah) : '-'}</td>
-                    <td class="py-3 px-4 text-right font-bold text-emerald-700">${formatRp(totalIn)}</td>
-                    <td class="py-3 px-4 text-right text-rose-600 font-semibold">${formatRp(totalOut)}</td>
-                    <td class="py-3 px-4 text-right font-bold text-slate-900">${formatRp(saldo)}</td>
-                </tr>
-            `;
-        });
-        tbody.innerHTML = html || '<tr><td colspan="6" class="text-center py-4 text-slate-400">Tidak ada data</td></tr>';
-        return totalInSum;
-    }
-
-    function renderOperasionalTable(rows) {
-        const tbody = document.querySelector('#tableOps tbody');
-        if (!tbody) return 0;
-        let html = '';
-        let totalOutSum = 0;
-
-        rows.forEach((row, index) => {
-            if (index < 1 || !row[0]) return;
-            const trxNo = row[0];
-            const tgl = row[1] || '-';
-            const coa = row[2] || '';
-            const ket = row[3] || '-';
-            const debit = cleanNumber(row[4]);
-            const kredit = cleanNumber(row[5]);
-            const saldo = cleanNumber(row[6]);
-
-            if (trxNo.toUpperCase().includes('TOTAL')) return;
-            totalOutSum += kredit;
-
-            html += `
-                <tr class="hover:bg-slate-50">
-                    <td class="py-3 px-4 font-mono font-bold text-slate-500">${trxNo}</td>
-                    <td class="py-3 px-4">${tgl}</td>
-                    <td class="py-3 px-4"><span class="bg-sky-100 text-sky-800 text-[11px] font-bold px-2 py-0.5 rounded-full">${coa}</span></td>
-                    <td class="py-3 px-4 font-medium text-slate-900">${ket}</td>
-                    <td class="py-3 px-4 text-right font-bold text-emerald-700">${debit > 0 ? formatRp(debit) : '-'}</td>
-                    <td class="py-3 px-4 text-right font-bold text-rose-600">${kredit > 0 ? formatRp(kredit) : '-'}</td>
-                    <td class="py-3 px-4 text-right font-bold text-slate-900">${saldo > 0 ? formatRp(saldo) : '-'}</td>
-                </tr>
-            `;
-        });
-        tbody.innerHTML = html || '<tr><td colspan="7" class="text-center py-4 text-slate-400">Tidak ada data</td></tr>';
-        return totalOutSum;
-    }
-
-    function renderRABTable(rows) {
-        const tbody = document.querySelector('#tableRAB tbody');
-        if (!tbody) return 0;
-        let html = '';
-        let totalRABSum = 0;
-
-        rows.forEach((row, index) => {
-            if (index < 1 || !row[0]) return;
-            const no = row[0];
-            const kategori = row[1] || '';
-            const uraian = row[2] || '';
-            const vol = row[3] || '';
-            const satuan = row[4] || '';
-            const harga = cleanNumber(row[5]);
-            const action = row[6] || '';
-            const total = cleanNumber(row[7]);
-            const ket = row[8] || '';
-
-            if (!no || no.toUpperCase().includes('TOTAL')) return;
-            totalRABSum += total;
-
-            html += `
-                <tr class="hover:bg-slate-50">
-                    <td class="py-3 px-4 font-bold text-slate-400">${no}</td>
-                    <td class="py-3 px-4 font-semibold text-slate-800">${kategori}</td>
-                    <td class="py-3 px-4 text-slate-900">${uraian}</td>
-                    <td class="py-3 px-4 text-center">${vol}</td>
-                    <td class="py-3 px-4">${satuan}</td>
-                    <td class="py-3 px-4 text-right">${formatRp(harga)}</td>
-                    <td class="py-3 px-4 text-center"><span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">${action}</span></td>
-                    <td class="py-3 px-4 text-right font-bold text-emerald-700">${formatRp(total)}</td>
-                    <td class="py-3 px-4 text-xs text-slate-500">${ket}</td>
-                </tr>
-            `;
-        });
-        tbody.innerHTML = html || '<tr><td colspan="9" class="text-center py-4 text-slate-400">Tidak ada data</td></tr>';
-        return totalRABSum;
-    }
-
-    function showToast(msg) {
-        const toast = document.getElementById('toastNotification');
-        if(toast) {
-            document.getElementById('toastMessage').innerText = msg;
-            toast.classList.remove('hidden');
-            setTimeout(() => toast.classList.add('hidden'), 4000);
+        function parseCSV(text) {
+            const lines = text.split('\n');
+            return lines.map(line => {
+                const regex = /(?:^|,)(?:"([^"]*)"|([^,]*))/g;
+                const row = [];
+                let match;
+                while ((match = regex.exec(line)) !== null) {
+                    row.push(match[1] !== undefined ? match[1].trim() : match[2].trim());
+                }
+                return row;
+            });
         }
-    }
 
-    window.addEventListener('DOMContentLoaded', () => { fetchRealtimeData(); });
-</script>
+        function formatRp(num) {
+            const parsed = parseFloat(num);
+            return isNaN(parsed) ? 'Rp 0' : 'Rp ' + Math.round(parsed).toLocaleString('id-ID');
+        }
+
+        async function loadDashboardData() {
+            const icon = document.getElementById('refreshIcon');
+            if (icon) icon.classList.add('fa-spin');
+
+            // GID untuk sheet RAB IPL (biasanya tab ke-3 atau sesuaikan GID tab Anda)
+            // Ganti 0 dengan GID sheet RAB IPL Anda jika perlu
+            const rabData = await fetchCSV('0'); 
+
+            if (rabData && rabData.length > 1) {
+                const tbody = document.querySelector('#tableRAB tbody');
+                let html = '';
+                rabData.forEach((row, idx) => {
+                    if (idx < 5 || !row[0]) return; // Lewati header
+                    html += `
+                        <tr class="hover:bg-slate-50">
+                            <td class="py-3 px-4 font-bold text-slate-400">${row[0]}</td>
+                            <td class="py-3 px-4 font-semibold text-slate-800">${row[1] || ''}</td>
+                            <td class="py-3 px-4 text-slate-900">${row[2] || ''}</td>
+                            <td class="py-3 px-4 text-center">${row[3] || ''}</td>
+                            <td class="py-3 px-4 text-right">${row[5] ? formatRp(row[5]) : '-'}</td>
+                            <td class="py-3 px-4 text-right font-bold text-emerald-700">${row[7] ? formatRp(row[7]) : '-'}</td>
+                        </tr>
+                    `;
+                });
+                if(html) tbody.innerHTML = html;
+            }
+
+            if (icon) icon.classList.remove('fa-spin');
+            showToast('Data berhasil disinkronisasi!');
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.className = 'tab-btn px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100');
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(`btn-${tabId}`).className = 'tab-btn px-4 py-2.5 rounded-xl bg-brand-maroon text-white shadow-sm';
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toastNotification');
+            t.classList.remove('hidden');
+            setTimeout(() => t.classList.add('hidden'), 3000);
+        }
+
+        window.addEventListener('DOMContentLoaded', loadDashboardData);
+    </script>
+</body>
+</html>
