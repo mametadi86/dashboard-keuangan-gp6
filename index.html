@@ -115,19 +115,19 @@
         <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200/80">
                 <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Pemasukan Kas</span>
-                <h3 id="kpiTotalPemasukan" class="text-2xl font-black text-slate-900 mt-2">Rp 3.118.889</h3>
+                <h3 id="kpiTotalPemasukan" class="text-2xl font-black text-slate-900 mt-2">Rp 0</h3>
             </div>
             <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200/80">
                 <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Pengeluaran</span>
-                <h3 id="kpiTotalPengeluaran" class="text-2xl font-black text-slate-900 mt-2">Rp 1.539.000</h3>
+                <h3 id="kpiTotalPengeluaran" class="text-2xl font-black text-slate-900 mt-2">Rp 0</h3>
             </div>
             <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200/80">
                 <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Saldo Kas Berjalan</span>
-                <h3 id="kpiSaldoKas" class="text-2xl font-black text-sky-700 mt-2">Rp 1.579.889</h3>
+                <h3 id="kpiSaldoKas" class="text-2xl font-black text-sky-700 mt-2">Rp 0</h3>
             </div>
             <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200/80">
                 <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Sisa Kebutuhan RAB</span>
-                <h3 id="kpiSisaRAB" class="text-2xl font-black text-amber-700 mt-2">Rp 24.201.000</h3>
+                <h3 id="kpiSisaRAB" class="text-2xl font-black text-amber-700 mt-2">Rp 0</h3>
             </div>
         </section>
 
@@ -281,8 +281,8 @@
 
         function formatRp(num) {
             const parsed = parseFloat(num);
-            if (isNaN(parsed)) return '0';
-            return parsed.toLocaleString('id-ID');
+            if (isNaN(parsed)) return 'Rp 0';
+            return 'Rp ' + Math.round(parsed).toLocaleString('id-ID');
         }
 
         function cleanNumber(str) {
@@ -293,25 +293,53 @@
 
         async function fetchRealtimeData() {
             const refreshIcon = document.getElementById('refreshIcon');
+            const lastUpdated = document.getElementById('lastUpdated');
             if (refreshIcon) refreshIcon.classList.add('fa-spin');
 
             const dataBukuKas = await fetchSheetData('Buku Kas IPL');
             const dataOps = await fetchSheetData('Laporan Operasional');
             const dataRAB = await fetchSheetData('RAB IPL');
 
-            if (dataBukuKas) renderBukuKasTable(dataBukuKas);
-            if (dataOps) renderOperasionalTable(dataOps);
-            if (dataRAB) renderRABTable(dataRAB);
-            renderCharts();
+            let totalIn = 0, totalOut = 0, saldoKas = 0, totalRAB = 0;
+
+            if (dataBukuKas) {
+                totalIn = renderBukuKasTable(dataBukuKas);
+            }
+            if (dataOps) {
+                totalOut = renderOperasionalTable(dataOps);
+            }
+            if (dataRAB) {
+                totalRAB = renderRABTable(dataRAB);
+            }
+
+            saldoKas = totalIn - totalOut;
+            const sisaRAB = totalRAB - totalOut;
+
+            // Update KPI Cards
+            document.getElementById('kpiTotalPemasukan').innerText = formatRp(totalIn);
+            document.getElementById('kpiTotalPengeluaran').innerText = formatRp(totalOut);
+            document.getElementById('kpiSaldoKas').innerText = formatRp(saldoKas);
+            document.getElementById('kpiSisaRAB').innerText = formatRp(sisaRAB > 0 ? sisaRAB : 0);
+
+            // Render Charts
+            renderCharts(dataBukuKas, dataRAB);
 
             if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+            
+            const now = new Date();
+            if (lastUpdated) {
+                lastUpdated.innerText = `(${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')})`;
+            }
+
             showToast('Data berhasil disinkronisasi real-time dari Google Sheets!');
         }
 
         function renderBukuKasTable(rows) {
             const tbody = document.querySelector('#tablePenerimaan tbody');
-            if (!tbody) return;
+            if (!tbody) return 0;
             let html = '';
+            let totalInSum = 0;
+
             rows.forEach((row, index) => {
                 if (index < 5 || !row[0]) return;
                 const bulan = row[0];
@@ -320,7 +348,10 @@
                 const totalIn = cleanNumber(row[3]);
                 const totalOut = cleanNumber(row[4]);
                 const saldo = cleanNumber(row[5]);
-                if (bulan.includes('TOTAL')) return;
+
+                if (bulan.toUpperCase().includes('TOTAL')) return;
+
+                totalInSum += totalIn;
 
                 html += `
                     <tr class="hover:bg-slate-50">
@@ -334,12 +365,15 @@
                 `;
             });
             tbody.innerHTML = html;
+            return totalInSum;
         }
 
         function renderOperasionalTable(rows) {
             const tbody = document.querySelector('#tableOps tbody');
-            if (!tbody) return;
+            if (!tbody) return 0;
             let html = '';
+            let totalOutSum = 0;
+
             rows.forEach((row, index) => {
                 if (index < 4 || !row[0]) return;
                 const trxNo = row[0];
@@ -349,7 +383,10 @@
                 const debit = cleanNumber(row[4]);
                 const kredit = cleanNumber(row[5]);
                 const saldo = cleanNumber(row[6]);
-                if (trxNo.includes('TOTAL')) return;
+
+                if (trxNo.toUpperCase().includes('TOTAL')) return;
+
+                totalOutSum += kredit;
 
                 html += `
                     <tr class="hover:bg-slate-50">
@@ -364,14 +401,19 @@
                 `;
             });
             tbody.innerHTML = html;
+            return totalOutSum;
         }
 
         function renderRABTable(rows) {
             const tbody = document.querySelector('#tableRAB tbody');
-            if (!tbody) return;
+            if (!tbody) return 0;
             let html = '';
+            let totalRABSum = 0;
+
             rows.forEach((row, index) => {
+                // Lewati judul header
                 if (index < 5 || !row[0]) return;
+                
                 const no = row[0];
                 const kategori = row[1] || '';
                 const uraian = row[2] || '';
@@ -383,6 +425,8 @@
                 const ket = row[8] || '';
 
                 if (!no || no.toUpperCase().includes('TOTAL')) return;
+
+                totalRABSum += total;
 
                 html += `
                     <tr class="hover:bg-slate-50">
@@ -399,19 +443,25 @@
                 `;
             });
             tbody.innerHTML = html;
+            return totalRABSum;
         }
 
-        function renderCharts() {
+        function renderCharts(dataBukuKas, dataRAB) {
             const ctxCashflow = document.getElementById('cashflowChart');
             if (ctxCashflow) {
                 if (cashflowChartInstance) cashflowChartInstance.destroy();
+
+                let labels = ['Okt 26', 'Nov 26', 'Des 26', 'Jan 27', 'Feb 27', 'Mar 27'];
+                let inData = [2603000, 300000, 0, 0, 0, 0];
+                let outData = [1539000, 0, 0, 0, 0, 0];
+
                 cashflowChartInstance = new Chart(ctxCashflow, {
                     type: 'bar',
                     data: {
-                        labels: ['Okt 26', 'Nov 26', 'Des 26', 'Jan 27', 'Feb 27', 'Mar 27'],
+                        labels: labels,
                         datasets: [
-                            { label: 'Pemasukan (Rp)', data: [2603000, 300000, 0, 0, 0, 0], backgroundColor: '#0f5132', borderRadius: 6 },
-                            { label: 'Pengeluaran (Rp)', data: [1539000, 0, 0, 0, 0, 0], backgroundColor: '#e11d48', borderRadius: 6 }
+                            { label: 'Pemasukan (Rp)', data: inData, backgroundColor: '#0f5132', borderRadius: 6 },
+                            { label: 'Pengeluaran (Rp)', data: outData, backgroundColor: '#e11d48', borderRadius: 6 }
                         ]
                     },
                     options: { responsive: true, maintainAspectRatio: false }
@@ -421,11 +471,26 @@
             const ctxRab = document.getElementById('rabChart');
             if (ctxRab) {
                 if (rabChartInstance) rabChartInstance.destroy();
+
+                let categories = {};
+                if (dataRAB && dataRAB.length > 5) {
+                    dataRAB.forEach((row, i) => {
+                        if (i >= 5 && row[1] && row[7]) {
+                            const cat = row[1];
+                            const val = cleanNumber(row[7]);
+                            categories[cat] = (categories[cat] || 0) + val;
+                        }
+                    });
+                }
+
+                let labels = Object.keys(categories).length > 0 ? Object.keys(categories) : ['Pengelolaan Kebersihan', 'Operasional & Fasum'];
+                let values = Object.values(categories).length > 0 ? Object.values(categories) : [150000, 4136970];
+
                 rabChartInstance = new Chart(ctxRab, {
                     type: 'doughnut',
                     data: {
-                        labels: ['Kebersihan & Sampah', 'Keamanan & Guard', 'Fasum & Perbaikan'],
-                        datasets: [{ data: [150000, 3079980, 1056990], backgroundColor: ['#0f5132', '#800020', '#dfa510'] }]
+                        labels: labels,
+                        datasets: [{ data: values, backgroundColor: ['#0f5132', '#800020', '#dfa510', '#0284c7'] }]
                     },
                     options: { responsive: true, maintainAspectRatio: false }
                 });
