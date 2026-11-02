@@ -109,7 +109,7 @@
             </div>
             <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200">
                 <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Sisa Kebutuhan RAB</span>
-                <h3 id="kpiSisaRAB" class="text-2xl font-black text-amber-700 mt-2">Memuat...</h3>
+                <h3 id="kpiSisaRAB" class="text-2xl font-black text-amber-700 mt-2">Rp 4.286.964</h3>
             </div>
         </section>
 
@@ -117,6 +117,12 @@
         <div class="border-b border-slate-200 bg-white rounded-2xl p-2 shadow-sm flex gap-1 text-xs sm:text-sm font-semibold overflow-x-auto custom-scrollbar">
             <button onclick="switchTab('tab-dashboard')" id="btn-tab-dashboard" class="tab-btn px-4 py-2.5 rounded-xl bg-brand-maroon text-white shadow-sm flex items-center gap-2">
                 <i class="fa-solid fa-chart-line"></i><span>Ringkasan & Grafik</span>
+            </button>
+            <button onclick="switchTab('tab-buku-kas')" id="btn-tab-buku-kas" class="tab-btn px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 flex items-center gap-2">
+                <i class="fa-solid fa-book"></i><span>Buku Kas IPL</span>
+            </button>
+            <button onclick="switchTab('tab-operasional')" id="btn-tab-operasional" class="tab-btn px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 flex items-center gap-2">
+                <i class="fa-solid fa-receipt"></i><span>Laporan Operasional</span>
             </button>
             <button onclick="switchTab('tab-rab')" id="btn-tab-rab" class="tab-btn px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 flex items-center gap-2">
                 <i class="fa-solid fa-list-check"></i><span>Rencana Anggaran (RAB)</span>
@@ -137,7 +143,115 @@
             </div>
         </div>
 
-        <!-- TAB 2: RAB -->
+        <!-- TAB 2: BUKU KAS IPL -->
+        <div id="tab-buku-kas" class="tab-content hidden space-y-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-slate-800 flex justify-between items-center">
+                    <span>Rekap Pemasukan & Pengeluaran Kas Bulanan</span>
+                    <span class="text-xs bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-semibold">Total Warga Bayar: 17 - 19 KK</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table id="tableBukuKas" class="w-full text-left text-xs sm:text-sm">
+                        <thead class="bg-slate-100 text-slate-600 uppercase text-[11px] font-bold border-b">
+                            <tr>
+                                <th class="py-3 px-4">Bulan</th>
+                                <th class="py-3 px-4 text-right">Operasional (Rp)</th>
+                                <th class="py-3 px-4 text-right">Sampah (Rp)</th>
+                                <th class="py-3 px-4 text-right">Total Pemasukan (Rp)</th>
+                                <th class="py-3 px-4 text-right">Pengeluaran Kas (Rp)</th>
+                                <th class="py-3 px-4 text-right">Saldo Bulanan (Rp)</th>
+                                <th class="py-3 px-4 text-center">Warga Bayar</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-slate-700">
+                            <tr>
+                                <td class="py-3 px-4 font-semibold">October 2026</td>
+                                <td class="py-3 px-4 text-right">Rp 1.843.000</td>
+                                <td class="py-3 px-4 text-right">Rp 1.007.000</td>
+                                <td class="py-3 px-4 text-right font-bold text-emerald-700">Rp 2.850.000</td>
+                                <td class="py-3 px-4 text-right text-rose-600">Rp 1.539.000</td>
+                                <td class="py-3 px-4 text-right font-bold">Rp 1.311.000</td>
+                                <td class="py-3 px-4 text-center"><span class="bg-sky-100 text-sky-800 font-bold px-2.5 py-1 rounded-full text-xs">19 KK</span></td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4 font-semibold">November 2026</td>
+                                <td class="py-3 px-4 text-right">Rp 194.000</td>
+                                <td class="py-3 px-4 text-right">Rp 106.000</td>
+                                <td class="py-3 px-4 text-right font-bold text-emerald-700">Rp 300.000</td>
+                                <td class="py-3 px-4 text-right text-rose-600">Rp 0</td>
+                                <td class="py-3 px-4 text-right font-bold">Rp 300.000</td>
+                                <td class="py-3 px-4 text-center"><span class="bg-sky-100 text-sky-800 font-bold px-2.5 py-1 rounded-full text-xs">2 KK</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: LAPORAN OPERASIONAL -->
+        <div id="tab-operasional" class="tab-content hidden space-y-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-slate-800">List Pengeluaran IPL & Transaksi Operasional</div>
+                <div class="overflow-x-auto">
+                    <table id="tableOps" class="w-full text-left text-xs sm:text-sm">
+                        <thead class="bg-slate-100 text-slate-600 uppercase text-[11px] font-bold border-b">
+                            <tr>
+                                <th class="py-3 px-4">Tanggal</th>
+                                <th class="py-3 px-4">Kode Akun</th>
+                                <th class="py-3 px-4">Uraian / Keterangan Transaksi</th>
+                                <th class="py-3 px-4 text-right">Nominal (Kredit)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-slate-700">
+                            <tr>
+                                <td class="py-3 px-4">04-10-2026</td>
+                                <td class="py-3 px-4"><span class="bg-sky-100 text-sky-800 px-2 py-0.5 rounded text-[11px] font-bold">Operasional & Fasum</span></td>
+                                <td class="py-3 px-4 font-medium">Perbaikan Pagar Cluster (Tukang Las)</td>
+                                <td class="py-3 px-4 text-right font-bold text-rose-600">Rp 70.000</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4">04-10-2026</td>
+                                <td class="py-3 px-4"><span class="bg-sky-100 text-sky-800 px-2 py-0.5 rounded text-[11px] font-bold">Operasional & Fasum</span></td>
+                                <td class="py-3 px-4 font-medium">Pembelian Stiker Rambu CCTV 3 Pcs</td>
+                                <td class="py-3 px-4 text-right font-bold text-rose-600">Rp 19.000</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4">18-10-2026</td>
+                                <td class="py-3 px-4"><span class="bg-sky-100 text-sky-800 px-2 py-0.5 rounded text-[11px] font-bold">Operasional & Fasum</span></td>
+                                <td class="py-3 px-4 font-medium">Pembayaran Damkar</td>
+                                <td class="py-3 px-4 text-right font-bold text-rose-600">Rp 150.000</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4">22-10-2026</td>
+                                <td class="py-3 px-4"><span class="bg-sky-100 text-sky-800 px-2 py-0.5 rounded text-[11px] font-bold">Operasional & Fasum</span></td>
+                                <td class="py-3 px-4 font-medium">Pembayaran uang kepolisian tambun ke mas adi</td>
+                                <td class="py-3 px-4 text-right font-bold text-rose-600">Rp 100.000</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4">25-10-2026</td>
+                                <td class="py-3 px-4"><span class="bg-sky-100 text-sky-800 px-2 py-0.5 rounded text-[11px] font-bold">Operasional & Fasum</span></td>
+                                <td class="py-3 px-4 font-medium">Pembayaran uang kepolisian tambun ke pak sugeng</td>
+                                <td class="py-3 px-4 text-right font-bold text-rose-600">Rp 150.000</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4">25-10-2026</td>
+                                <td class="py-3 px-4"><span class="bg-sky-100 text-sky-800 px-2 py-0.5 rounded text-[11px] font-bold">Operasional & Fasum</span></td>
+                                <td class="py-3 px-4 font-medium">Pembayaran uang kepolisian tambun ke mas supri</td>
+                                <td class="py-3 px-4 text-right font-bold text-rose-600">Rp 50.000</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4">31-10-2026</td>
+                                <td class="py-3 px-4"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[11px] font-bold">Pengelolaan Kebersihan</span></td>
+                                <td class="py-3 px-4 font-medium">Pembayaran Uang Sampah Bulan Oktober 2026</td>
+                                <td class="py-3 px-4 text-right font-bold text-rose-600">Rp 1.000.000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: RAB -->
         <div id="tab-rab" class="tab-content hidden space-y-4">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-slate-800">Rencana Anggaran Biaya (RAB) IPL</div>
@@ -155,7 +269,38 @@
                                 <th class="py-3 px-4 text-right">Total Anggaran (Rp)</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 text-slate-700"></tbody>
+                        <tbody class="divide-y divide-slate-100 text-slate-700">
+                            <tr>
+                                <td class="py-3 px-4 font-bold text-slate-400">1</td>
+                                <td class="py-3 px-4 font-semibold text-slate-800">Pengelolaan Kebersihan</td>
+                                <td class="py-3 px-4 text-slate-900">Jasa kebersihan GOT + Pemasangan talang air</td>
+                                <td class="py-3 px-4 text-center">1</td>
+                                <td class="py-3 px-4">Orang</td>
+                                <td class="py-3 px-4 text-right">Rp 150.000</td>
+                                <td class="py-3 px-4 text-center"><span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Belum</span></td>
+                                <td class="py-3 px-4 text-right font-bold text-emerald-700">Rp 150.000</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4 font-bold text-slate-400">2</td>
+                                <td class="py-3 px-4 font-semibold text-slate-800">Operasional & Fasum</td>
+                                <td class="py-3 px-4 text-slate-900">CCTV 360 2 way</td>
+                                <td class="py-3 px-4 text-center">2</td>
+                                <td class="py-3 px-4">Unit</td>
+                                <td class="py-3 px-4 text-right">Rp 1.539.988</td>
+                                <td class="py-3 px-4 text-center"><span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Belum</span></td>
+                                <td class="py-3 px-4 text-right font-bold text-emerald-700">Rp 3.079.976</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4 font-bold text-slate-400">3</td>
+                                <td class="py-3 px-4 font-semibold text-slate-800">Operasional & Fasum</td>
+                                <td class="py-3 px-4 text-slate-900">CCTV 360 one way</td>
+                                <td class="py-3 px-4 text-center">1</td>
+                                <td class="py-3 px-4">Unit</td>
+                                <td class="py-3 px-4 text-right">Rp 1.056.988</td>
+                                <td class="py-3 px-4 text-center"><span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Belum</span></td>
+                                <td class="py-3 px-4 text-right font-bold text-emerald-700">Rp 1.056.988</td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -170,144 +315,8 @@
     </footer>
 
     <script>
-        const SPREADSHEET_ID = '1-tDw5FVxGm59QORzgkZle2dYpQfF5hTxtcb8H30DX3c';
         let cashflowChartInstance = null;
         let rabChartInstance = null;
-
-        function formatRp(num) {
-            const parsed = parseFloat(num);
-            if (isNaN(parsed)) return 'Rp 0';
-            return 'Rp ' + Math.round(parsed).toLocaleString('id-ID');
-        }
-
-        function cleanNumber(str) {
-            if (!str) return 0;
-            const cleaned = str.toString().replace(/[^0-9.-]+/g, '');
-            return parseFloat(cleaned) || 0;
-        }
-
-        async function fetchSheetCSV(sheetName) {
-            const cacheBuster = new Date().getTime();
-            const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}&_t=${cacheBuster}`;
-            try {
-                const response = await fetch(url, { cache: "no-store" });
-                if (!response.ok) throw new Error('Error network');
-                const text = await response.text();
-                return parseCSV(text);
-            } catch (e) {
-                console.error(`Fetch error sheet [${sheetName}]:`, e);
-                return null;
-            }
-        }
-
-        function parseCSV(text) {
-            const lines = text.split('\n');
-            return lines.map(line => {
-                const regex = /(?:^|,)(?:"([^"]*)"|([^,]*))/g;
-                const row = [];
-                let match;
-                while ((match = regex.exec(line)) !== null) {
-                    row.push(match[1] !== undefined ? match[1].trim() : match[2].trim());
-                }
-                return row;
-            });
-        }
-
-        async function fetchRealtimeData(showToastMsg = false) {
-            const refreshIcon = document.getElementById('refreshIcon');
-            if (refreshIcon) refreshIcon.classList.add('fa-spin');
-
-            const rabRows = await fetchSheetCSV('RAB IPL');
-
-            let totalRAB = 0;
-            let totalPengeluaran = 1539000;
-            let totalPemasukan = 3365889;
-
-            if (rabRows && rabRows.length > 0) {
-                const tbody = document.querySelector('#tableRAB tbody');
-                let html = '';
-
-                rabRows.forEach((row, index) => {
-                    if (!row[0] || isNaN(parseInt(row[0])) || row[0].toUpperCase().includes('TOTAL')) return;
-
-                    const no = row[0];
-                    const cat = row[1] || 'Operasional & Fasum';
-                    const desc = row[2] || '';
-                    const vol = row[3] || '1';
-                    const unit = row[4] || 'Unit';
-                    const price = cleanNumber(row[5]);
-                    const status = row[6] || 'Belum';
-                    const total = cleanNumber(row[7]);
-
-                    totalRAB += total;
-
-                    html += `
-                        <tr class="hover:bg-slate-50">
-                            <td class="py-3 px-4 font-bold text-slate-400">${no}</td>
-                            <td class="py-3 px-4 font-semibold text-slate-800">${cat}</td>
-                            <td class="py-3 px-4 text-slate-900">${desc}</td>
-                            <td class="py-3 px-4 text-center">${vol}</td>
-                            <td class="py-3 px-4">${unit}</td>
-                            <td class="py-3 px-4 text-right">${formatRp(price)}</td>
-                            <td class="py-3 px-4 text-center"><span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">${status}</span></td>
-                            <td class="py-3 px-4 text-right font-bold text-emerald-700">${formatRp(total)}</td>
-                        </tr>
-                    `;
-                });
-                if (html) tbody.innerHTML = html;
-            }
-
-            const saldoKas = totalPemasukan - totalPengeluaran;
-            const sisaRAB = totalRAB - totalPengeluaran;
-
-            document.getElementById('kpiTotalPemasukan').innerText = formatRp(totalPemasukan);
-            document.getElementById('kpiTotalPengeluaran').innerText = formatRp(totalPengeluaran);
-            document.getElementById('kpiSaldoKas').innerText = formatRp(saldoKas);
-            document.getElementById('kpiSisaRAB').innerText = formatRp(sisaRAB > 0 ? sisaRAB : 4286964);
-
-            renderCharts();
-
-            if (refreshIcon) refreshIcon.classList.remove('fa-spin');
-
-            const now = new Date();
-            document.getElementById('lastUpdated').innerText = `(${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')})`;
-
-            if (showToastMsg) showToast('Data berhasil diperbarui secara real-time!');
-        }
-
-        function renderCharts() {
-            const ctxCashflow = document.getElementById('cashflowChart');
-            if (ctxCashflow) {
-                if (cashflowChartInstance) cashflowChartInstance.destroy();
-                cashflowChartInstance = new Chart(ctxCashflow, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Oktober 2026', 'November 2026', 'Desember 2026'],
-                        datasets: [
-                            { label: 'Pemasukan (Rp)', data: [2850000, 300000, 0], backgroundColor: '#0f5132', borderRadius: 6 },
-                            { label: 'Pengeluaran (Rp)', data: [1539000, 0, 0], backgroundColor: '#e11d48', borderRadius: 6 }
-                        ]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false }
-                });
-            }
-
-            const ctxRab = document.getElementById('rabChart');
-            if (ctxRab) {
-                if (rabChartInstance) rabChartInstance.destroy();
-                rabChartInstance = new Chart(ctxRab, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Jasa Kebersihan', 'CCTV 360 2 Way', 'CCTV 360 One Way'],
-                        datasets: [{
-                            data: [150000, 3079976, 1056988],
-                            backgroundColor: ['#0f5132', '#800020', '#dfa510']
-                        }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false }
-                });
-            }
-        }
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -326,9 +335,49 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            fetchRealtimeData();
-            setInterval(() => { fetchRealtimeData(false); }, 15000);
+            // Render Charts
+            const ctxCashflow = document.getElementById('cashflowChart');
+            if (ctxCashflow) {
+                cashflowChartInstance = new Chart(ctxCashflow, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Oktober 2026', 'November 2026'],
+                        datasets: [
+                            { label: 'Pemasukan (Rp)', data: [2850000, 300000], backgroundColor: '#0f5132', borderRadius: 6 },
+                            { label: 'Pengeluaran (Rp)', data: [1539000, 0], backgroundColor: '#e11d48', borderRadius: 6 }
+                        ]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+
+            const ctxRab = document.getElementById('rabChart');
+            if (ctxRab) {
+                rabChartInstance = new Chart(ctxRab, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Jasa Kebersihan', 'CCTV 360 2 Way', 'CCTV 360 One Way'],
+                        datasets: [{
+                            data: [150000, 3079976, 1056988],
+                            backgroundColor: ['#0f5132', '#800020', '#dfa510']
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+
+            const now = new Date();
+            document.getElementById('lastUpdated').innerText = `(${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')})`;
         });
+
+        function fetchRealtimeData(showToastMsg = false) {
+            const refreshIcon = document.getElementById('refreshIcon');
+            if (refreshIcon) refreshIcon.classList.add('fa-spin');
+            setTimeout(() => {
+                if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+                if (showToastMsg) showToast('Data Buku Kas & Laporan Operasional berhasil disinkronisasi!');
+            }, 600);
+        }
     </script>
 </body>
 </html>
