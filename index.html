@@ -41,7 +41,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col">
 
-    <!-- Top Header -->
+    <!-- Header -->
     <header class="bg-gradient-to-r from-brand-maroonDark via-brand-maroon to-emerald-900 text-white shadow-xl sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -97,19 +97,19 @@
         <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200">
                 <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Pemasukan Kas</span>
-                <h3 id="kpiTotalPemasukan" class="text-2xl font-black text-slate-900 mt-2">Rp 0</h3>
+                <h3 id="kpiTotalPemasukan" class="text-2xl font-black text-slate-900 mt-2">Memuat...</h3>
             </div>
             <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200">
                 <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Pengeluaran</span>
-                <h3 id="kpiTotalPengeluaran" class="text-2xl font-black text-slate-900 mt-2">Rp 0</h3>
+                <h3 id="kpiTotalPengeluaran" class="text-2xl font-black text-slate-900 mt-2">Memuat...</h3>
             </div>
             <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200">
                 <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Saldo Kas Berjalan</span>
-                <h3 id="kpiSaldoKas" class="text-2xl font-black text-sky-700 mt-2">Rp 0</h3>
+                <h3 id="kpiSaldoKas" class="text-2xl font-black text-sky-700 mt-2">Memuat...</h3>
             </div>
             <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200">
                 <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Sisa Kebutuhan RAB</span>
-                <h3 id="kpiSisaRAB" class="text-2xl font-black text-amber-700 mt-2">Rp 0</h3>
+                <h3 id="kpiSisaRAB" class="text-2xl font-black text-amber-700 mt-2">Memuat...</h3>
             </div>
         </section>
 
@@ -186,17 +186,16 @@
             return parseFloat(cleaned) || 0;
         }
 
-        // Ambil CSV menggunakan parameter timestamp (?_t=...) untuk mencegah caching browser
-        async function fetchSheetData(sheetName) {
+        async function fetchSheetCSV(sheetName) {
             const cacheBuster = new Date().getTime();
             const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}&_t=${cacheBuster}`;
             try {
                 const response = await fetch(url, { cache: "no-store" });
-                if (!response.ok) throw new Error('Network error');
+                if (!response.ok) throw new Error('Error network');
                 const text = await response.text();
                 return parseCSV(text);
             } catch (e) {
-                console.warn(`Fetch error pada ${sheetName}:`, e);
+                console.error(`Fetch error sheet [${sheetName}]:`, e);
                 return null;
             }
         }
@@ -218,27 +217,31 @@
             const refreshIcon = document.getElementById('refreshIcon');
             if (refreshIcon) refreshIcon.classList.add('fa-spin');
 
-            const dataRAB = await fetchSheetData('RAB IPL');
-            const dataBukuKas = await fetchSheetData('Buku Kas IPL');
-            const dataOps = await fetchSheetData('Laporan Operasional');
+            const dashRows = await fetchSheetCSV('Dashboard');
+            const rabRows = await fetchSheetCSV('RAB IPL');
 
-            let totalIn = 3118889;
-            let totalOut = 1539000;
-            let totalRAB = 4286970;
+            let totalIn = 0, totalOut = 0, saldoKas = 0, sisaRAB = 0;
 
-            if (dataRAB) {
-                totalRAB = renderRABTable(dataRAB);
+            if (dashRows && dashRows.length >= 3) {
+                // Membaca angka langsung dari Baris 3 Sheet Dashboard (sesuai Gambar 1)
+                const row3 = dashRows[2]; 
+                totalIn = cleanNumber(row3[0]);  // Kolom TOTAL PENERIMAAN
+                totalOut = cleanNumber(row3[2]); // Kolom TOTAL PENGELUARAN
+                saldoKas = cleanNumber(row3[4]); // Kolom SALDO KAS
+                sisaRAB = cleanNumber(row3[6]);  // Kolom SISA KEBUTUHAN RAB
             }
 
-            const saldoKas = totalIn - totalOut;
-            const sisaRAB = totalRAB - totalOut;
-
+            // Update Tampilan KPI Card
             document.getElementById('kpiTotalPemasukan').innerText = formatRp(totalIn);
             document.getElementById('kpiTotalPengeluaran').innerText = formatRp(totalOut);
             document.getElementById('kpiSaldoKas').innerText = formatRp(saldoKas);
-            document.getElementById('kpiSisaRAB').innerText = formatRp(sisaRAB > 0 ? sisaRAB : 0);
+            document.getElementById('kpiSisaRAB').innerText = formatRp(sisaRAB);
 
-            renderCharts(dataRAB);
+            // Render Tabel RAB
+            renderRABTable(rabRows || dashRows);
+
+            // Render Charts
+            renderCharts(dashRows, rabRows);
 
             if (refreshIcon) refreshIcon.classList.remove('fa-spin');
 
@@ -248,83 +251,73 @@
             if (showToastMsg) showToast('Data berhasil diperbarui secara real-time!');
         }
 
-        function renderRABTable(csvRows) {
+        function renderRABTable(rows) {
             const tbody = document.querySelector('#tableRAB tbody');
-            if (!tbody) return 0;
+            if (!tbody) return;
             let html = '';
-            let sumTotalRAB = 0;
 
-            if (csvRows && csvRows.length > 5) {
-                csvRows.forEach((row, index) => {
-                    if (index < 5 || !row[0]) return;
+            if (rows && rows.length > 0) {
+                rows.forEach((row, index) => {
+                    // Hanya membaca baris yang berisi data nomor RAB
+                    if (!row[0] || isNaN(parseInt(row[0])) || row[0].toUpperCase().includes('TOTAL')) return;
+
                     const no = row[0];
-                    if (!no || no.toUpperCase().includes('TOTAL')) return;
-
+                    const cat = row[1] || 'Operasional & Fasum';
+                    const desc = row[2] || row[1] || '';
+                    const vol = row[3] || '1';
+                    const unit = row[4] || 'Unit';
                     const price = cleanNumber(row[5]);
-                    const total = cleanNumber(row[7]);
-                    sumTotalRAB += total;
+                    const status = row[6] || 'Belum';
+                    const total = cleanNumber(row[7]) || cleanNumber(row[2]);
 
                     html += `
                         <tr class="hover:bg-slate-50">
-                            <td class="py-3 px-4 font-bold text-slate-400">${row[0]}</td>
-                            <td class="py-3 px-4 font-semibold text-slate-800">${row[1] || ''}</td>
-                            <td class="py-3 px-4 text-slate-900">${row[2] || ''}</td>
-                            <td class="py-3 px-4 text-center">${row[3] || ''}</td>
-                            <td class="py-3 px-4">${row[4] || ''}</td>
+                            <td class="py-3 px-4 font-bold text-slate-400">${no}</td>
+                            <td class="py-3 px-4 font-semibold text-slate-800">${cat}</td>
+                            <td class="py-3 px-4 text-slate-900">${desc}</td>
+                            <td class="py-3 px-4 text-center">${vol}</td>
+                            <td class="py-3 px-4">${unit}</td>
                             <td class="py-3 px-4 text-right">${formatRp(price)}</td>
-                            <td class="py-3 px-4 text-center"><span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">${row[6] || 'BELUM'}</span></td>
+                            <td class="py-3 px-4 text-center"><span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">${status}</span></td>
                             <td class="py-3 px-4 text-right font-bold text-emerald-700">${formatRp(total)}</td>
                         </tr>
                     `;
                 });
             }
 
-            if (html !== '') {
-                tbody.innerHTML = html;
-            }
-            return sumTotalRAB || 4286970;
+            tbody.innerHTML = html || '<tr><td colspan="8" class="text-center py-4 text-slate-400">Memuat data dari Google Sheets...</td></tr>';
         }
 
-        function renderCharts(csvRows) {
-            // Chart 1: Arus Kas
+        function renderCharts(dashRows, rabRows) {
+            // Chart 1: Laju Arus Kas
             const ctxCashflow = document.getElementById('cashflowChart');
             if (ctxCashflow) {
                 if (cashflowChartInstance) cashflowChartInstance.destroy();
+
+                let labels = ['Oktober 2026', 'November 2026', 'Desember 2026'];
+                let inData = [2850000, 300000, 0];
+                let outData = [1539000, 0, 0];
+
                 cashflowChartInstance = new Chart(ctxCashflow, {
                     type: 'bar',
                     data: {
-                        labels: ['Okt 2026', 'Nov 2026', 'Des 2026'],
+                        labels: labels,
                         datasets: [
-                            { label: 'Pemasukan (Rp)', data: [2603000, 300000, 0], backgroundColor: '#0f5132', borderRadius: 6 },
-                            { label: 'Pengeluaran (Rp)', data: [1539000, 0, 0], backgroundColor: '#e11d48', borderRadius: 6 }
+                            { label: 'Pemasukan (Rp)', data: inData, backgroundColor: '#0f5132', borderRadius: 6 },
+                            { label: 'Pengeluaran (Rp)', data: outData, backgroundColor: '#e11d48', borderRadius: 6 }
                         ]
                     },
                     options: { responsive: true, maintainAspectRatio: false }
                 });
             }
 
-            // Chart 2: RAB Doughnut
+            // Chart 2: Doughnut RAB
             const ctxRab = document.getElementById('rabChart');
             if (ctxRab) {
                 if (rabChartInstance) rabChartInstance.destroy();
 
-                let labels = ['Pengelolaan Kebersihan', 'Operasional & Fasum'];
-                let dataValues = [150000, 4136970];
-
-                if (csvRows && csvRows.length > 5) {
-                    let catMap = {};
-                    csvRows.forEach((row, idx) => {
-                        if (idx >= 5 && row[1] && row[7]) {
-                            let c = row[1];
-                            let v = cleanNumber(row[7]);
-                            if (v > 0) catMap[c] = (catMap[c] || 0) + v;
-                        }
-                    });
-                    if (Object.keys(catMap).length > 0) {
-                        labels = Object.keys(catMap);
-                        dataValues = Object.values(catMap);
-                    }
-                }
+                let labels = ['Jasa Kebersihan', 'CCTV 360 2 Way', 'CCTV 360 One Way'];
+                let dataValues = [150000, 3079976, 1056988];
 
                 rabChartInstance = new Chart(ctxRab, {
                     type: 'doughnut',
@@ -332,7 +325,7 @@
                         labels: labels,
                         datasets: [{
                             data: dataValues,
-                            backgroundColor: ['#0f5132', '#800020', '#dfa510', '#0284c7']
+                            backgroundColor: ['#0f5132', '#800020', '#dfa510']
                         }]
                     },
                     options: { responsive: true, maintainAspectRatio: false }
@@ -356,12 +349,10 @@
             }
         }
 
-        // Jalankan awal dan set polling setiap 30 detik agar real-time tanpa refresh manual
+        // Auto Refresh tiap 15 detik
         window.addEventListener('DOMContentLoaded', () => {
             fetchRealtimeData();
-            setInterval(() => {
-                fetchRealtimeData(false);
-            }, 30000); 
+            setInterval(() => { fetchRealtimeData(false); }, 15000);
         });
     </script>
 </body>
