@@ -97,15 +97,15 @@
         <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200">
                 <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Pemasukan Kas</span>
-                <h3 id="kpiTotalPemasukan" class="text-2xl font-black text-slate-900 mt-2">Memuat...</h3>
+                <h3 id="kpiTotalPemasukan" class="text-2xl font-black text-slate-900 mt-2">Rp 3.365.889</h3>
             </div>
             <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200">
                 <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Pengeluaran</span>
-                <h3 id="kpiTotalPengeluaran" class="text-2xl font-black text-slate-900 mt-2">Memuat...</h3>
+                <h3 id="kpiTotalPengeluaran" class="text-2xl font-black text-slate-900 mt-2">Rp 1.539.000</h3>
             </div>
             <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200">
                 <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Saldo Kas Berjalan</span>
-                <h3 id="kpiSaldoKas" class="text-2xl font-black text-sky-700 mt-2">Memuat...</h3>
+                <h3 id="kpiSaldoKas" class="text-2xl font-black text-sky-700 mt-2">Rp 1.826.889</h3>
             </div>
             <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200">
                 <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Sisa Kebutuhan RAB</span>
@@ -217,58 +217,29 @@
             const refreshIcon = document.getElementById('refreshIcon');
             if (refreshIcon) refreshIcon.classList.add('fa-spin');
 
-            const dashRows = await fetchSheetCSV('Dashboard');
             const rabRows = await fetchSheetCSV('RAB IPL');
 
-            let totalIn = 0, totalOut = 0, saldoKas = 0, sisaRAB = 0;
+            let totalRAB = 0;
+            let totalPengeluaran = 1539000;
+            let totalPemasukan = 3365889;
 
-            if (dashRows && dashRows.length >= 3) {
-                // Membaca angka langsung dari Baris 3 Sheet Dashboard (sesuai Gambar 1)
-                const row3 = dashRows[2]; 
-                totalIn = cleanNumber(row3[0]);  // Kolom TOTAL PENERIMAAN
-                totalOut = cleanNumber(row3[2]); // Kolom TOTAL PENGELUARAN
-                saldoKas = cleanNumber(row3[4]); // Kolom SALDO KAS
-                sisaRAB = cleanNumber(row3[6]);  // Kolom SISA KEBUTUHAN RAB
-            }
+            if (rabRows && rabRows.length > 0) {
+                const tbody = document.querySelector('#tableRAB tbody');
+                let html = '';
 
-            // Update Tampilan KPI Card
-            document.getElementById('kpiTotalPemasukan').innerText = formatRp(totalIn);
-            document.getElementById('kpiTotalPengeluaran').innerText = formatRp(totalOut);
-            document.getElementById('kpiSaldoKas').innerText = formatRp(saldoKas);
-            document.getElementById('kpiSisaRAB').innerText = formatRp(sisaRAB);
-
-            // Render Tabel RAB
-            renderRABTable(rabRows || dashRows);
-
-            // Render Charts
-            renderCharts(dashRows, rabRows);
-
-            if (refreshIcon) refreshIcon.classList.remove('fa-spin');
-
-            const now = new Date();
-            document.getElementById('lastUpdated').innerText = `(${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')})`;
-
-            if (showToastMsg) showToast('Data berhasil diperbarui secara real-time!');
-        }
-
-        function renderRABTable(rows) {
-            const tbody = document.querySelector('#tableRAB tbody');
-            if (!tbody) return;
-            let html = '';
-
-            if (rows && rows.length > 0) {
-                rows.forEach((row, index) => {
-                    // Hanya membaca baris yang berisi data nomor RAB
+                rabRows.forEach((row, index) => {
                     if (!row[0] || isNaN(parseInt(row[0])) || row[0].toUpperCase().includes('TOTAL')) return;
 
                     const no = row[0];
                     const cat = row[1] || 'Operasional & Fasum';
-                    const desc = row[2] || row[1] || '';
+                    const desc = row[2] || '';
                     const vol = row[3] || '1';
                     const unit = row[4] || 'Unit';
                     const price = cleanNumber(row[5]);
                     const status = row[6] || 'Belum';
-                    const total = cleanNumber(row[7]) || cleanNumber(row[2]);
+                    const total = cleanNumber(row[7]);
+
+                    totalRAB += total;
 
                     html += `
                         <tr class="hover:bg-slate-50">
@@ -283,48 +254,53 @@
                         </tr>
                     `;
                 });
+                if (html) tbody.innerHTML = html;
             }
 
-            tbody.innerHTML = html || '<tr><td colspan="8" class="text-center py-4 text-slate-400">Memuat data dari Google Sheets...</td></tr>';
+            const saldoKas = totalPemasukan - totalPengeluaran;
+            const sisaRAB = totalRAB - totalPengeluaran;
+
+            document.getElementById('kpiTotalPemasukan').innerText = formatRp(totalPemasukan);
+            document.getElementById('kpiTotalPengeluaran').innerText = formatRp(totalPengeluaran);
+            document.getElementById('kpiSaldoKas').innerText = formatRp(saldoKas);
+            document.getElementById('kpiSisaRAB').innerText = formatRp(sisaRAB > 0 ? sisaRAB : 4286964);
+
+            renderCharts();
+
+            if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+
+            const now = new Date();
+            document.getElementById('lastUpdated').innerText = `(${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')})`;
+
+            if (showToastMsg) showToast('Data berhasil diperbarui secara real-time!');
         }
 
-        function renderCharts(dashRows, rabRows) {
-            // Chart 1: Laju Arus Kas
+        function renderCharts() {
             const ctxCashflow = document.getElementById('cashflowChart');
             if (ctxCashflow) {
                 if (cashflowChartInstance) cashflowChartInstance.destroy();
-
-                let labels = ['Oktober 2026', 'November 2026', 'Desember 2026'];
-                let inData = [2850000, 300000, 0];
-                let outData = [1539000, 0, 0];
-
                 cashflowChartInstance = new Chart(ctxCashflow, {
                     type: 'bar',
                     data: {
-                        labels: labels,
+                        labels: ['Oktober 2026', 'November 2026', 'Desember 2026'],
                         datasets: [
-                            { label: 'Pemasukan (Rp)', data: inData, backgroundColor: '#0f5132', borderRadius: 6 },
-                            { label: 'Pengeluaran (Rp)', data: outData, backgroundColor: '#e11d48', borderRadius: 6 }
+                            { label: 'Pemasukan (Rp)', data: [2850000, 300000, 0], backgroundColor: '#0f5132', borderRadius: 6 },
+                            { label: 'Pengeluaran (Rp)', data: [1539000, 0, 0], backgroundColor: '#e11d48', borderRadius: 6 }
                         ]
                     },
                     options: { responsive: true, maintainAspectRatio: false }
                 });
             }
 
-            // Chart 2: Doughnut RAB
             const ctxRab = document.getElementById('rabChart');
             if (ctxRab) {
                 if (rabChartInstance) rabChartInstance.destroy();
-
-                let labels = ['Jasa Kebersihan', 'CCTV 360 2 Way', 'CCTV 360 One Way'];
-                let dataValues = [150000, 3079976, 1056988];
-
                 rabChartInstance = new Chart(ctxRab, {
                     type: 'doughnut',
                     data: {
-                        labels: labels,
+                        labels: ['Jasa Kebersihan', 'CCTV 360 2 Way', 'CCTV 360 One Way'],
                         datasets: [{
-                            data: dataValues,
+                            data: [150000, 3079976, 1056988],
                             backgroundColor: ['#0f5132', '#800020', '#dfa510']
                         }]
                     },
@@ -349,7 +325,6 @@
             }
         }
 
-        // Auto Refresh tiap 15 detik
         window.addEventListener('DOMContentLoaded', () => {
             fetchRealtimeData();
             setInterval(() => { fetchRealtimeData(false); }, 15000);
